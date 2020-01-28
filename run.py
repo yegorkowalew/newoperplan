@@ -31,6 +31,7 @@ def serviceNoteReadFile(sn_file):
                 '№ Заказа':str,
                 '№ СЗ с изменениями':str,
             },
+            # converters= {'Дата СЗ': pd.to_datetime},
             index_col=0
         )
 
@@ -65,6 +66,35 @@ def serviceNoteReadFile(sn_file):
         # df = df.where(df.notnull(), None)
         # df_records = df.to_dict('records')
         # return df_records
+        # df['sn_date'] = df['sn_date'].to_datetime(errors='ignore')
+        df['sn_date'] = pd.to_datetime(df['sn_date'], errors='coerce')
+
+        def setup_pickup_plan_date(row):
+            if not pd.isnull(row['pickup_plan_date']):
+                return row['pickup_plan_date']
+
+            if not pd.isnull(row['pickup_plan_days']):
+                if not pd.isnull(row['sn_date']):
+                    return row['sn_date'] + pd.DateOffset(row['pickup_plan_days'])
+
+            if not pd.isnull(row['sn_date']):
+                return row['sn_date']
+
+        def setup_shipping_plan_date(row):
+            if not pd.isnull(row['shipping_plan_date']):
+                return row['shipping_plan_date']
+
+            if not pd.isnull(row['shipping_plan_days']):
+                if not pd.isnull(row['sn_date']):
+                    return row['sn_date'] + pd.DateOffset(row['shipping_plan_days'])
+
+            if not pd.isnull(row['sn_date']):
+                return row['sn_date']
+
+        df['pickup_plan_date_f'] = df.apply (lambda row: setup_pickup_plan_date(row), axis=1)
+        df['shipping_plan_date_f'] = df.apply (lambda row: setup_shipping_plan_date(row), axis=1)
+        print(df.dtypes)
+        # print(df)
         return df
 
 """
@@ -98,22 +128,21 @@ def readyReadFile(ready_file):
             'Статус в Плане производства':'status'
             }
         )
-        # print(df)
-        # df = df.astype(object)
-        # df = df.where(df.notnull(), None)
-        # df_records = df.to_dict('records')
-        # return df_records
-        # df['Новый'] = df['ID']
         level_map = {'-': False}
-        df['not_produced'] = df['status'].map(level_map)
+        df['produced'] = df['status'].map(level_map)
         level_map = {'+': True}
         df['ready_status'] = df['ready'].map(level_map)
-        df = 
-        # df['newColumn'] = df['status']
+        df = df.drop(['status', 'ready'], axis=1)
+        df['ready_status'] = df['ready_status'].fillna(False)
+        df['produced'] = df['produced'].fillna(True)
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+            print(df)
         return df
 
 
 # zz = serviceNoteReadFile(SN_FILE)
 # print(readyReadFile(READY_FILE))
-readyReadFile(READY_FILE).to_excel("output.xlsx")
+# readyReadFile(READY_FILE)
+# readyReadFile(READY_FILE).to_excel("output.xlsx")
 serviceNoteReadFile(SN_FILE).to_excel("output1.xlsx")
+# serviceNoteReadFile(SN_FILE)
