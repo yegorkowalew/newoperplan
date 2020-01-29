@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Clear test xlsx files from test folder
+testfiles/
+
 # Distribution / packaging
 .Python
 build/
