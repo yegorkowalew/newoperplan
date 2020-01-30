@@ -193,13 +193,38 @@ if __name__ == "__main__":
     result = pd.concat(df_arr, axis=1, sort=False)
     result.columns = ['dispatcher_1', 'pickup_date_1', 'shipping_date_1', 'design_date_1', 'drawings_date_1', 'pickup_issue_f_1', 'shipping_issue_f_1', 'design_issue_f_1', 'drawings_issue_f_1', 'dispatcher_2', 'pickup_date_2', 'shipping_date_2', 'design_date_2', 'drawings_date_2', 'pickup_issue_f_2', 'shipping_issue_f_2', 'design_issue_f_2', 'drawings_issue_f_2', 'dispatcher_3', 'pickup_date_3', 'shipping_date_3', 'design_date_3', 'drawings_date_3', 'pickup_issue_f_3', 'shipping_issue_f_3', 'design_issue_f_3', 'drawings_issue_f_3', 'dispatcher_4', 'pickup_date_4', 'shipping_date_4', 'design_date_4', 'drawings_date_4', 'pickup_issue_f_4', 'shipping_issue_f_4', 'design_issue_f_4', 'drawings_issue_f_4', 'dispatcher_5', 'pickup_date_5', 'shipping_date_5', 'design_date_5', 'drawings_date_5', 'pickup_issue_f_5', 'shipping_issue_f_5', 'design_issue_f_5', 'drawings_issue_f_5', 'dispatcher_6', 'pickup_date_6', 'shipping_date_6', 'design_date_6', 'drawings_date_6', 'pickup_issue_f_6', 'shipping_issue_f_6', 'design_issue_f_6', 'drawings_issue_f_6']
 
-    def example(x):
-        x['p1'] = '1'
-        x['p2'] = '2'
-        x['p3'] = '3'
-        return x
+    def example(row):
+        if pd.isnull(row['pickup_date_1']) and pd.isnull(row['pickup_date_2']) and pd.isnull(row['pickup_date_3']) and pd.isnull(row['pickup_date_4']) and pd.isnull(row['pickup_date_5']) and pd.isnull(row['pickup_date_6']) == True:
+            pass
+        else:
+            print('Не пустой')
+            lst = [row['pickup_date_1'], row['pickup_date_2'], row['pickup_date_3'], row['pickup_date_4'], row['pickup_date_5'], row['pickup_date_6']]
+            row['pickup_date'] = max(lst)
+            row['shipping_date'] = max([row['shipping_date_1'], row['shipping_date_2'], row['shipping_date_3'], row['shipping_date_4'], row['shipping_date_5'], row['shipping_date_6']])
+
+            row['p2'] =  row['dispatcher_'+str(lst.index(max(lst)) + 1)]
+            row['p3'] = '3'
+        return row
 
     result = result.apply(example, axis=1)
     # result = pd.merge(df_arr, suffixes=['_1', '_2', '_3', '_4', '_5', '_6'])
-
+    # result = result.drop(['dispatcher_1', 'pickup_date_1', 'shipping_date_1', 'design_date_1', 'drawings_date_1', 'pickup_issue_f_1', 'shipping_issue_f_1', 'design_issue_f_1', 'drawings_issue_f_1', 'dispatcher_2', 'pickup_date_2', 'shipping_date_2', 'design_date_2', 'drawings_date_2', 'pickup_issue_f_2', 'shipping_issue_f_2', 'design_issue_f_2', 'drawings_issue_f_2', 'dispatcher_3', 'pickup_date_3', 'shipping_date_3', 'design_date_3', 'drawings_date_3', 'pickup_issue_f_3', 'shipping_issue_f_3', 'design_issue_f_3', 'drawings_issue_f_3', 'dispatcher_4', 'pickup_date_4', 'shipping_date_4', 'design_date_4', 'drawings_date_4', 'pickup_issue_f_4', 'shipping_issue_f_4', 'design_issue_f_4', 'drawings_issue_f_4', 'dispatcher_5', 'pickup_date_5', 'shipping_date_5', 'design_date_5', 'drawings_date_5', 'pickup_issue_f_5', 'shipping_issue_f_5', 'design_issue_f_5', 'drawings_issue_f_5', 'dispatcher_6', 'pickup_date_6', 'shipping_date_6', 'design_date_6', 'drawings_date_6', 'pickup_issue_f_6', 'shipping_issue_f_6', 'design_issue_f_6', 'drawings_issue_f_6'], axis=1)
+    result = result[[
+        'dispatcher_1', 
+        'pickup_date_1', 
+        'dispatcher_2', 
+        'pickup_date_2', 
+        'dispatcher_3', 
+        'pickup_date_3', 
+        'dispatcher_4', 
+        'pickup_date_4', 
+        'dispatcher_5', 
+        'pickup_date_5', 
+        'dispatcher_6', 
+        'pickup_date_6',
+        'pickup_date',
+        'shipping_date',
+        'p2',
+        'p3',
+        ]]
     result.to_excel('out.xlsx')
