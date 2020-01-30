@@ -176,12 +176,30 @@ def inDocumentFindFile(in_folder, need_file):
     return folder_list
 
 def inDocumentRebuild(in_folder, need_file):
+    df_list = []
     for folder in inDocumentFindFile(in_folder, need_file):
         df = inDocumentReadFile(folder, need_file)
-        df.to_excel(folder+'\\'+"output1.xlsx")
+        # df.to_excel(folder+'\\'+"output1.xlsx")
         # print(folder)
-        print(df)
+        # print(df)
+        print('append DF')
+        df_list.append(df)
+    return df_list
 
 if __name__ == "__main__":
     from settings import IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER
-    print(inDocumentRebuild(IN_DOCUMENT_FOLDER, IN_DOCUMENT_FILE))
+    df_arr = inDocumentRebuild(IN_DOCUMENT_FOLDER, IN_DOCUMENT_FILE)
+    # print(df_arr)
+    result = pd.concat(df_arr, axis=1, sort=False)
+    result.columns = ['dispatcher_1', 'pickup_date_1', 'shipping_date_1', 'design_date_1', 'drawings_date_1', 'pickup_issue_f_1', 'shipping_issue_f_1', 'design_issue_f_1', 'drawings_issue_f_1', 'dispatcher_2', 'pickup_date_2', 'shipping_date_2', 'design_date_2', 'drawings_date_2', 'pickup_issue_f_2', 'shipping_issue_f_2', 'design_issue_f_2', 'drawings_issue_f_2', 'dispatcher_3', 'pickup_date_3', 'shipping_date_3', 'design_date_3', 'drawings_date_3', 'pickup_issue_f_3', 'shipping_issue_f_3', 'design_issue_f_3', 'drawings_issue_f_3', 'dispatcher_4', 'pickup_date_4', 'shipping_date_4', 'design_date_4', 'drawings_date_4', 'pickup_issue_f_4', 'shipping_issue_f_4', 'design_issue_f_4', 'drawings_issue_f_4', 'dispatcher_5', 'pickup_date_5', 'shipping_date_5', 'design_date_5', 'drawings_date_5', 'pickup_issue_f_5', 'shipping_issue_f_5', 'design_issue_f_5', 'drawings_issue_f_5', 'dispatcher_6', 'pickup_date_6', 'shipping_date_6', 'design_date_6', 'drawings_date_6', 'pickup_issue_f_6', 'shipping_issue_f_6', 'design_issue_f_6', 'drawings_issue_f_6']
+
+    def example(x):
+        x['p1'] = '1'
+        x['p2'] = '2'
+        x['p3'] = '3'
+        return x
+
+    result = result.apply(example, axis=1)
+    # result = pd.merge(df_arr, suffixes=['_1', '_2', '_3', '_4', '_5', '_6'])
+
+    result.to_excel('out.xlsx')
