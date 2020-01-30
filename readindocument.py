@@ -189,21 +189,19 @@ def inDocumentRebuild(in_folder, need_file):
 if __name__ == "__main__":
     from settings import IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER
     df_arr = inDocumentRebuild(IN_DOCUMENT_FOLDER, IN_DOCUMENT_FILE)
-    # print(df_arr)
     result = pd.concat(df_arr, axis=1, sort=False)
     result.columns = ['dispatcher_1', 'pickup_date_1', 'shipping_date_1', 'design_date_1', 'drawings_date_1', 'pickup_issue_f_1', 'shipping_issue_f_1', 'design_issue_f_1', 'drawings_issue_f_1', 'dispatcher_2', 'pickup_date_2', 'shipping_date_2', 'design_date_2', 'drawings_date_2', 'pickup_issue_f_2', 'shipping_issue_f_2', 'design_issue_f_2', 'drawings_issue_f_2', 'dispatcher_3', 'pickup_date_3', 'shipping_date_3', 'design_date_3', 'drawings_date_3', 'pickup_issue_f_3', 'shipping_issue_f_3', 'design_issue_f_3', 'drawings_issue_f_3', 'dispatcher_4', 'pickup_date_4', 'shipping_date_4', 'design_date_4', 'drawings_date_4', 'pickup_issue_f_4', 'shipping_issue_f_4', 'design_issue_f_4', 'drawings_issue_f_4', 'dispatcher_5', 'pickup_date_5', 'shipping_date_5', 'design_date_5', 'drawings_date_5', 'pickup_issue_f_5', 'shipping_issue_f_5', 'design_issue_f_5', 'drawings_issue_f_5', 'dispatcher_6', 'pickup_date_6', 'shipping_date_6', 'design_date_6', 'drawings_date_6', 'pickup_issue_f_6', 'shipping_issue_f_6', 'design_issue_f_6', 'drawings_issue_f_6']
 
     def example(row):
-        if pd.isnull(row['pickup_date_1']) and pd.isnull(row['pickup_date_2']) and pd.isnull(row['pickup_date_3']) and pd.isnull(row['pickup_date_4']) and pd.isnull(row['pickup_date_5']) and pd.isnull(row['pickup_date_6']) == True:
-            pass
-        else:
-            print('Не пустой')
-            lst = [row['pickup_date_1'], row['pickup_date_2'], row['pickup_date_3'], row['pickup_date_4'], row['pickup_date_5'], row['pickup_date_6']]
-            row['pickup_date'] = max(lst)
-            row['shipping_date'] = max([row['shipping_date_1'], row['shipping_date_2'], row['shipping_date_3'], row['shipping_date_4'], row['shipping_date_5'], row['shipping_date_6']])
-
-            row['p2'] =  row['dispatcher_'+str(lst.index(max(lst)) + 1)]
-            row['p3'] = '3'
+        zz = pd.DataFrame({
+            'data':[row['pickup_date_1'], row['pickup_date_2'], row['pickup_date_3'], row['pickup_date_4'], row['pickup_date_5'], row['pickup_date_6']],
+            'disp':[row['dispatcher_1'], row['dispatcher_2'], row['dispatcher_3'], row['dispatcher_4'], row['dispatcher_5'], row['dispatcher_6']]
+        })
+        zz = zz.dropna()
+        if zz.empty != True:
+            zz = zz.loc[zz['data'].idxmax()]
+            row['pickup_date'] = zz['data']
+            row['dispatcher'] = zz['disp']
         return row
 
     result = result.apply(example, axis=1)
@@ -223,8 +221,6 @@ if __name__ == "__main__":
         'dispatcher_6', 
         'pickup_date_6',
         'pickup_date',
-        'shipping_date',
-        'p2',
-        'p3',
+        'dispatcher',
         ]]
     result.to_excel('out.xlsx')
