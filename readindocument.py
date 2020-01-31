@@ -217,33 +217,52 @@ def worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER):
     result = pd.concat(df_arr, axis=1, sort=False)
     result.columns = get_col_header(dispatcher_len)
     def example(row):
-        cut_df = pd.DataFrame({
-            'date': get_col_header_disp('pickup_date', dispatcher_len, row),
-            'disp': get_col_header_disp('dispatcher', dispatcher_len, row)
-        })
-        cut_df = cut_df.dropna()
-        if cut_df.empty != True:
-            cut_df = cut_df.loc[cut_df['date'].idxmax()]
-            row['pickup_date'] = cut_df['date']
-            row['dispatcher'] = cut_df['disp']
+        doc_type_list = [
+            'pickup',
+            'shipping',
+            'design',
+            'drawings',
+        ]
+        for doc_type in doc_type_list:
+            doc_type_is = '%s_%s' % (doc_type, 'issue')
+            disp_doc_type_is = 'dispatcher_%s_%s' % (doc_type, 'issue')
+
+            iss_df = pd.DataFrame({
+                'date': get_col_header_disp(doc_type_is, dispatcher_len, row),
+                'disp': get_col_header_disp('dispatcher', dispatcher_len, row)
+            })
+            
+            iss_df = iss_df[(iss_df['date']==False)]
+            if iss_df.empty != True:
+                row[doc_type_is] = False
+                row[disp_doc_type_is] = iss_df.loc[iss_df.index[0], 'disp']
+
+            doc_type_is = '%s_%s' % (doc_type, 'date')
+            disp_doc_type_is = 'dispatcher_%s_%s' % (doc_type, 'date')
+
+            cut_df = pd.DataFrame({
+                'date': get_col_header_disp(doc_type_is, dispatcher_len, row),
+                'disp': get_col_header_disp('dispatcher', dispatcher_len, row)
+            })
+            cut_df = cut_df.dropna()
+            if cut_df.empty != True:
+                cut_df = cut_df.loc[cut_df['date'].idxmax()]
+                row[doc_type_is] = cut_df['date']
+                row[disp_doc_type_is] = cut_df['disp']
         return row
+
     result = result.apply(example, axis=1)
     result = result[[
-        'dispatcher_1', 
-        'pickup_date_1', 
-        'dispatcher_2', 
-        'pickup_date_2', 
-        'dispatcher_3', 
-        'pickup_date_3', 
-        'dispatcher_4', 
-        'pickup_date_4', 
-        'dispatcher_5', 
-        'pickup_date_5', 
-        'dispatcher_6', 
-        'pickup_date_6',
         'pickup_date',
-        'dispatcher',
+        'dispatcher_pickup_date',
+        'shipping_date'
+        'dispatcher_shipping_date',
+        'design_date'
+        'dispatcher_design_date',
+        'drawings_date'
+        'dispatcher_drawings_date',
         ]]
+
     result.to_excel('out.xlsx')
 
 if __name__ == "__main__":
