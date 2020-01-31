@@ -50,13 +50,6 @@ def inDocumentReadFile(path, file_name):
             dtype={
                 'ID':int,
             },
-            # converters={
-            #     'Готово':bool,
-            #     'Комплектовочные Выдача':bool,
-            #     'Отгрузочные Выдача':bool,
-            #     'Конструкторские Выдача':bool,
-            #     'Изменения чертежей Выдача':bool,
-            # }
         )
 
     except Exception as ind:
@@ -99,7 +92,6 @@ def inDocumentReadFile(path, file_name):
         df['drawings_date_3'] = pd.to_datetime(df['drawings_date_3'])
 
         df = df.astype({
-            # 'pickup_issue':'object',
             'pickup_date_1':'object',
             'pickup_date_2':'object',
             'pickup_date_3':'object',
@@ -130,9 +122,6 @@ def inDocumentReadFile(path, file_name):
         df['design_date'] = df.apply (lambda row: setup_design_date(row), axis=1)
         df['drawings_date'] = df.apply (lambda row: setup_drawings_date(row), axis=1)
 
-        # level_map = {0: False}
-        # df['pickup_issue_f'] = df['pickup_issue'].map(level_map)
-        # df['pickup_issue_f'] = df['pickup_issue_f'].fillna(False)
         def setup_pickup_issue(row):
             if row['pickup_issue'] == 0:
                 return False
@@ -179,10 +168,6 @@ def inDocumentRebuild(in_folder, need_file):
     df_list = []
     for folder in inDocumentFindFile(in_folder, need_file):
         df = inDocumentReadFile(folder, need_file)
-        # df.to_excel(folder+'\\'+"output1.xlsx")
-        # print(folder)
-        # print(df)
-        print('append DF')
         df_list.append(df)
     return df_list
 
@@ -236,6 +221,9 @@ def worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER):
             if iss_df.empty != True:
                 row[doc_type_is] = False
                 row[disp_doc_type_is] = iss_df.loc[iss_df.index[0], 'disp']
+            else:
+                row[doc_type_is] = None
+                row[disp_doc_type_is] = None
 
             doc_type_is = '%s_%s' % (doc_type, 'date')
             disp_doc_type_is = 'dispatcher_%s_%s' % (doc_type, 'date')
@@ -249,22 +237,36 @@ def worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER):
                 cut_df = cut_df.loc[cut_df['date'].idxmax()]
                 row[doc_type_is] = cut_df['date']
                 row[disp_doc_type_is] = cut_df['disp']
+            else:
+                row[doc_type_is] = None
+                row[disp_doc_type_is] = None
         return row
 
     result = result.apply(example, axis=1)
     result = result[[
-        'pickup_date',
-        'dispatcher_pickup_date',
-        'shipping_date'
-        'dispatcher_shipping_date',
-        'design_date'
-        'dispatcher_design_date',
-        'drawings_date'
-        'dispatcher_drawings_date',
+            'pickup_date',
+            'dispatcher_pickup_date',
+            'pickup_issue',
+            'dispatcher_pickup_issue',
+            
+            'shipping_date',
+            'dispatcher_shipping_date',
+            'shipping_issue',
+            'dispatcher_shipping_issue',
+            
+            'design_date',
+            'dispatcher_design_date',
+            'design_issue',
+            'dispatcher_design_issue',
+            
+            'drawings_date',
+            'dispatcher_drawings_date',
+            'drawings_issue',
+            'dispatcher_drawings_issue',
         ]]
 
-    result.to_excel('out.xlsx')
+    return result
 
 if __name__ == "__main__":
     from settings import IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER
-    worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
+    worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER).to_excel('out.xlsx')
