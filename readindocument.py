@@ -186,27 +186,48 @@ def inDocumentRebuild(in_folder, need_file):
         df_list.append(df)
     return df_list
 
-if __name__ == "__main__":
-    from settings import IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER
+def get_col_header(dispatcher_len):
+    col_header = [
+        'dispatcher',
+        'pickup_date',
+        'shipping_date',
+        'design_date',
+        'drawings_date',
+        'pickup_issue',
+        'shipping_issue',
+        'design_issue',
+        'drawings_issue'
+    ]
+    df_header = []
+    for disp_num in range(1, dispatcher_len+1):
+        for col_header_name in col_header:
+            df_header.append('%s_%s' % (col_header_name, str(disp_num)))
+    return df_header
+
+def get_col_header_disp(name, dispatcher_len, row):
+    df_list = []
+    for num in range(1, dispatcher_len+1):
+        col_name = '%s_%s' % (name, str(num))
+        df_list.append(row[col_name])
+    return df_list
+
+def worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER):
     df_arr = inDocumentRebuild(IN_DOCUMENT_FOLDER, IN_DOCUMENT_FILE)
+    dispatcher_len = len(df_arr)
     result = pd.concat(df_arr, axis=1, sort=False)
-    result.columns = ['dispatcher_1', 'pickup_date_1', 'shipping_date_1', 'design_date_1', 'drawings_date_1', 'pickup_issue_f_1', 'shipping_issue_f_1', 'design_issue_f_1', 'drawings_issue_f_1', 'dispatcher_2', 'pickup_date_2', 'shipping_date_2', 'design_date_2', 'drawings_date_2', 'pickup_issue_f_2', 'shipping_issue_f_2', 'design_issue_f_2', 'drawings_issue_f_2', 'dispatcher_3', 'pickup_date_3', 'shipping_date_3', 'design_date_3', 'drawings_date_3', 'pickup_issue_f_3', 'shipping_issue_f_3', 'design_issue_f_3', 'drawings_issue_f_3', 'dispatcher_4', 'pickup_date_4', 'shipping_date_4', 'design_date_4', 'drawings_date_4', 'pickup_issue_f_4', 'shipping_issue_f_4', 'design_issue_f_4', 'drawings_issue_f_4', 'dispatcher_5', 'pickup_date_5', 'shipping_date_5', 'design_date_5', 'drawings_date_5', 'pickup_issue_f_5', 'shipping_issue_f_5', 'design_issue_f_5', 'drawings_issue_f_5', 'dispatcher_6', 'pickup_date_6', 'shipping_date_6', 'design_date_6', 'drawings_date_6', 'pickup_issue_f_6', 'shipping_issue_f_6', 'design_issue_f_6', 'drawings_issue_f_6']
-
+    result.columns = get_col_header(dispatcher_len)
     def example(row):
-        zz = pd.DataFrame({
-            'data':[row['pickup_date_1'], row['pickup_date_2'], row['pickup_date_3'], row['pickup_date_4'], row['pickup_date_5'], row['pickup_date_6']],
-            'disp':[row['dispatcher_1'], row['dispatcher_2'], row['dispatcher_3'], row['dispatcher_4'], row['dispatcher_5'], row['dispatcher_6']]
+        cut_df = pd.DataFrame({
+            'date': get_col_header_disp('pickup_date', dispatcher_len, row),
+            'disp': get_col_header_disp('dispatcher', dispatcher_len, row)
         })
-        zz = zz.dropna()
-        if zz.empty != True:
-            zz = zz.loc[zz['data'].idxmax()]
-            row['pickup_date'] = zz['data']
-            row['dispatcher'] = zz['disp']
+        cut_df = cut_df.dropna()
+        if cut_df.empty != True:
+            cut_df = cut_df.loc[cut_df['date'].idxmax()]
+            row['pickup_date'] = cut_df['date']
+            row['dispatcher'] = cut_df['disp']
         return row
-
     result = result.apply(example, axis=1)
-    # result = pd.merge(df_arr, suffixes=['_1', '_2', '_3', '_4', '_5', '_6'])
-    # result = result.drop(['dispatcher_1', 'pickup_date_1', 'shipping_date_1', 'design_date_1', 'drawings_date_1', 'pickup_issue_f_1', 'shipping_issue_f_1', 'design_issue_f_1', 'drawings_issue_f_1', 'dispatcher_2', 'pickup_date_2', 'shipping_date_2', 'design_date_2', 'drawings_date_2', 'pickup_issue_f_2', 'shipping_issue_f_2', 'design_issue_f_2', 'drawings_issue_f_2', 'dispatcher_3', 'pickup_date_3', 'shipping_date_3', 'design_date_3', 'drawings_date_3', 'pickup_issue_f_3', 'shipping_issue_f_3', 'design_issue_f_3', 'drawings_issue_f_3', 'dispatcher_4', 'pickup_date_4', 'shipping_date_4', 'design_date_4', 'drawings_date_4', 'pickup_issue_f_4', 'shipping_issue_f_4', 'design_issue_f_4', 'drawings_issue_f_4', 'dispatcher_5', 'pickup_date_5', 'shipping_date_5', 'design_date_5', 'drawings_date_5', 'pickup_issue_f_5', 'shipping_issue_f_5', 'design_issue_f_5', 'drawings_issue_f_5', 'dispatcher_6', 'pickup_date_6', 'shipping_date_6', 'design_date_6', 'drawings_date_6', 'pickup_issue_f_6', 'shipping_issue_f_6', 'design_issue_f_6', 'drawings_issue_f_6'], axis=1)
     result = result[[
         'dispatcher_1', 
         'pickup_date_1', 
@@ -224,3 +245,7 @@ if __name__ == "__main__":
         'dispatcher',
         ]]
     result.to_excel('out.xlsx')
+
+if __name__ == "__main__":
+    from settings import IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER
+    worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
