@@ -57,7 +57,7 @@ def serviceNoteReadFile(sn_file):
             'Отгрузочные План Вручную':'shipping_plan_date',
             'Конструкторская документация План Дней от СЗ':'design_plan_days',
             'Конструкторская документация План Вручную':'design_plan_date',
-            'Материалы План':'material_plan_days',
+            'Материалы План':'material_plan_date',
             }
         )
         df['sn_date'] = pd.to_datetime(df['sn_date'], errors='coerce')
@@ -86,8 +86,30 @@ def serviceNoteReadFile(sn_file):
 
         df['pickup_plan_date_f'] = df.apply (lambda row: setup_pickup_plan_date(row), axis=1)
         df['shipping_plan_date_f'] = df.apply (lambda row: setup_shipping_plan_date(row), axis=1)
+        df = df[[
+            'shipment_from',
+            'shipment_before',
+            'product_name',
+            'counterparty',
+            'order_no',
+            'amount',
+            'sn_no',
+            'sn_no_amended',
+            'sn_date',
+            'sn_date_fact',
+            'pickup_plan_days',
+            'pickup_plan_date',
+            'shipping_plan_days',
+            'shipping_plan_date',
+            'design_plan_days',
+            'design_plan_date',
+            'material_plan_date',
+            'pickup_plan_date_f',
+            'shipping_plan_date_f',
+            ]]
         return df
 
 if __name__ == "__main__":
     from settings import SN_FILE
-    print(serviceNoteReadFile(SN_FILE))
+    serviceNoteDf = serviceNoteReadFile(SN_FILE)
+    serviceNoteDf.to_excel("testfiles\\Service_Notes.xlsx")
