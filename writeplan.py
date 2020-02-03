@@ -6,9 +6,6 @@ from datetime import datetime
 shop_symbol = ['Ц', 'М', 'К', 'З', 'КД', 'ОД']
 n_shop_symbol = itertools.cycle(shop_symbol)
 
-# for i in range(2000):
-#    print(next(n_shop_symbol))
-
 def findMinMaxDate(df):
     maxDates = []
     minDates = []
@@ -32,10 +29,6 @@ def writeWorker(dflist):
 
     # df.to_excel('testfiles\\out.xlsx')
 
-# Короб підвідний ДСП-32-ОТ-2(78) 01.01.40-02 оц.
-# №Зк: 2317122, №СЗ: 25, Кол-во: 200
-# ТОВ "Зелена Долина"
-# Отгрузка: 20.02.2019
     def get_product_name(row):
         if not pd.isnull(row['product_name']):
             return row['product_name']
@@ -91,7 +84,6 @@ def writeWorker(dflist):
         if pd.isnull(row['shipment_from']) and pd.isnull(row['shipment_before']):
             return 'Отгрузка: Не установлено'
 
-        # pickup_plan_date_f	shipping_plan_date_f
     def get_pickup_doc_info(row):
         returnstr = 'Комплектовочные: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y") 
         if row['pickup_issue'] == False:
@@ -113,11 +105,9 @@ def writeWorker(dflist):
         col_2.append(next(n_shop_symbol))
         col_3.append(index)
 
-
         col_1.append(get_info(row))
         col_2.append(next(n_shop_symbol))
         col_3.append(index)
-
 
         col_1.append(get_counterparty(row))
         col_2.append(next(n_shop_symbol))
@@ -131,11 +121,9 @@ def writeWorker(dflist):
         col_2.append(next(n_shop_symbol))
         col_3.append(index)
 
-
         col_1.append(get_shipping_doc_info(row))
         col_2.append(next(n_shop_symbol))
         col_3.append(index)
-
 
     frame = { 'Index': col_3, 'Product': col_1, 'Shop': col_2}
     result = pd.DataFrame(frame) 
@@ -153,12 +141,3 @@ if __name__ == "__main__":
     productionPlanDf = productionPlanReadFile(PRODUCTION_PLAN_FILE)
     inDocumentDf = worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
     writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
-
-
-
-    # dfd = pd.to_datetime(pd.DataFrame(zz), errors='ignore')
-    # dfd['date'] = pd.to_datetime(df['date'])  
-    # print(dfd)
-    
-    # from settings import IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER
-    # worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER).to_excel('out.xlsx')
