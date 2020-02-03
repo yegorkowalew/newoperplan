@@ -91,7 +91,18 @@ def writeWorker(dflist):
             # return 'Комплектовочные: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y")
             return returnstr
         else:
-            return returnstr
+            if not pd.isnull(row['pickup_date']):
+                # Дата прихода документации установлена
+                # pickup_days = (row['pickup_date'] - pd.Timestamp.today()).days
+                # pickup_plan_date_f
+                pickup_days = (row['pickup_plan_date_f'] - row['pickup_date']).days
+                pickup_str = '%sдн.' % pickup_days
+                if pickup_days > 0:
+                    return '%s (Получено на %s раньше)' % (returnstr, pickup_str)
+                else:
+                    return '%s (Получено на %s позже)' % (returnstr, pickup_str)
+            else:
+                return 'Нет даты'
 
     def get_shipping_doc_info(row):
         return 'Отгрузочные: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
