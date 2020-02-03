@@ -102,8 +102,11 @@ def writeWorker(dflist):
                 else:
                     return '%s (Получено на %s позже)' % (returnstr, pickup_str)
             else:
-                return 'Нет даты'
-
+                pickup_days = (row['pickup_plan_date_f'] - pd.Timestamp.today()).days
+                if pickup_days > 0:
+                    return '%s (Осталось %sдн.)' % (returnstr, pickup_days)
+                else:
+                    return '%s (Просрочено %sдн.)' % (returnstr, pickup_days)
     def get_shipping_doc_info(row):
         return 'Отгрузочные: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
 
