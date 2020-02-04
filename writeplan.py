@@ -3,7 +3,12 @@ import pandas as pd
 import datetime
 from datetime import datetime
 
-shop_symbol = ['Ц', 'М', 'К', 'З', 'КД', 'ОД']
+# КВ –комплектовочная ведомость, 
+# ВП – ведомость покупных, 
+# ОС –отгрузочная спецификация, 
+# КД – конструкторская документация
+
+shop_symbol = ['Ц', 'М', 'К', 'З', 'КВ', 'ОС']
 n_shop_symbol = itertools.cycle(shop_symbol)
 
 def findMinMaxDate(df):
@@ -22,12 +27,24 @@ def findMinMaxDate(df):
     min_date = pd.to_datetime(pd.Series(minDates), errors='coerce').min()
     return min_date, max_date
 
-def writeWorker(dflist):
+def create_dataframe(dflist):
     df = pd.concat(dflist, axis=1, sort=False)
     df = df.loc[(df['ready_status'] == False) & (df['produced'] == True)]
+
+    # Нужно создать три столбца:
+    # days_compl_plan "Дней на выполнение по плану. Дата выполнения по плану минус дата служебной записки."
+    # days_compl_go "Дней на выполнение прошло. Устанавливается в том случае, если еще не выполнено. Сегодняшняя дата минус дата начала выполнения."
+    # days_compl_execution "Дней на выполнение потрачено. Устанавливается в том случае, если задача выполнена. Дата начала выполнения - дата окончания выполнения"
+
+    df['days_compl_pickup_plan'] = 'www'
+    # days_compl_pickup_plan "Дней на выполнение комплектовочных по плану.
+    return df
+
+def writeWorker(dflist):
+    df = create_dataframe(dflist)
     min_date, max_date = findMinMaxDate(df)
 
-    # df.to_excel('testfiles\\out.xlsx')
+    df.to_excel('testfiles\\out.xlsx')
 
     def get_product_name(row):
         if not pd.isnull(row['product_name']):
@@ -85,16 +102,13 @@ def writeWorker(dflist):
             return 'Отгрузка: Не установлено'
 
     def get_pickup_doc_info(row):
-        returnstr = 'Комплектовочные: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y") 
+        returnstr = 'КВ: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y") 
         if row['pickup_issue'] == False:
             returnstr = '%s (Не нужны, %s)' % (returnstr, row['dispatcher_pickup_issue'])
-            # return 'Комплектовочные: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y")
             return returnstr
         else:
             if not pd.isnull(row['pickup_date']):
                 # Дата прихода документации установлена
-                # pickup_days = (row['pickup_date'] - pd.Timestamp.today()).days
-                # pickup_plan_date_f
                 pickup_days = (row['pickup_plan_date_f'] - row['pickup_date']).days
                 pickup_str = '%sдн.' % pickup_days
                 if pickup_days > 0:
@@ -107,8 +121,9 @@ def writeWorker(dflist):
                     return '%s (Осталось %sдн.)' % (returnstr, pickup_days)
                 else:
                     return '%s (Просрочено %sдн.)' % (returnstr, pickup_days)
+
     def get_shipping_doc_info(row):
-        return 'Отгрузочные: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
+        return 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
 
     col_1 = []
     col_2 = []
