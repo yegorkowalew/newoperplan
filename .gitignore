@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+.vscode/
 
 # Clear test xlsx files from test folder
 testfiles/
