@@ -313,8 +313,27 @@ if __name__ == "__main__":
     from readproductionplan import productionPlanReadFile
     from readindocument import worker
 
+    import time
+    def timing():
+        # Счетчик времени, таймер
+        start_time = time.time()
+        return lambda x: print("[{:.2f}с.] {}".format(time.time() - start_time, x))
+
+    t = timing()
+
     readyDf = readyReadFile(READY_FILE)
+    t("Готовые: {}".format(len(readyDf)))
+
     serviceNoteDf = serviceNoteReadFile(SN_FILE)
+    t("Служебные записки: {}".format(len(serviceNoteDf)))
+
     productionPlanDf = productionPlanReadFile(PRODUCTION_PLAN_FILE)
+    t("План производства: {}".format(len(productionPlanDf)))
+
     inDocumentDf = worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
+    t("Документация: {}".format(len(inDocumentDf)))
+
     writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
+    t("Создал план")
+
+    t("Конец выполнения")
