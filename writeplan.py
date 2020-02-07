@@ -36,7 +36,7 @@ def create_dataframe(dflist):
     # days_compl_go "Дней на выполнение прошло. Устанавливается в том случае, если еще не выполнено. Сегодняшняя дата минус дата начала выполнения."
     # days_compl_execution "Дней на выполнение потрачено. Устанавливается в том случае, если задача выполнена. Дата начала выполнения - дата окончания выполнения"
 
-    df['days_compl_pickup_plan'] = 'www'
+    # df['days_compl_pickup_plan'] = 'www'
     # days_compl_pickup_plan "Дней на выполнение комплектовочных по плану.
     return df
 
@@ -44,7 +44,7 @@ def writeWorker(dflist):
     df = create_dataframe(dflist)
     min_date, max_date = findMinMaxDate(df)
 
-    df.to_excel('testfiles\\out.xlsx')
+    # df.to_excel('testfiles\\out.xlsx')
 
     def get_product_name(row):
         if not pd.isnull(row['product_name']):
@@ -123,38 +123,186 @@ def writeWorker(dflist):
                     return '%s (Просрочено %sдн.)' % (returnstr, pickup_days)
 
     def get_shipping_doc_info(row):
-        return 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
+        # return 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
+        returnstr = 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y") 
+        if row['shipping_issue'] == False:
+            returnstr = '%s (Не нужны, %s)' % (returnstr, row['dispatcher_shipping_issue'])
+            return returnstr
+        else:
+            if not pd.isnull(row['shipping_date']):
+                # Дата прихода документации установлена
+                shipping_days = (row['shipping_plan_date_f'] - row['shipping_date']).days
+                shipping_str = '%sдн.' % shipping_days
+                if shipping_days > 0:
+                    return '%s (Получено на %s раньше)' % (returnstr, shipping_str)
+                else:
+                    return '%s (Получено на %s позже)' % (returnstr, shipping_str)
+            else:
+                shipping_days = (row['shipping_plan_date_f'] - pd.Timestamp.today()).days
+                if shipping_days > 0:
+                    return '%s (Осталось %sдн.)' % (returnstr, shipping_days)
+                else:
+                    return '%s (Просрочено %sдн.)' % (returnstr, shipping_days)
 
-    col_1 = []
-    col_2 = []
-    col_3 = []
-    col_4 = []
+    def get_work_start(row, shop_letter):
+        if shop_letter == 'К':
+            return row['101_start_date']
+        if shop_letter == 'М':
+            return row['102_start_date']
+        if shop_letter == 'Ц':
+            return row['104_start_date']
+        if shop_letter == 'З':
+            return row['107_start_date']
+        if shop_letter == 'КВ':
+            return row['sn_date']
+        if shop_letter == 'ОС':
+            return row['sn_date']
+        
+    def get_work_end(row, shop_letter):
+        if shop_letter == 'К':
+            return row['101_end_date']
+        if shop_letter == 'М':
+            return row['102_end_date']
+        if shop_letter == 'Ц':
+            return row['104_end_date']
+        if shop_letter == 'З':
+            return row['107_end_date']
+        if shop_letter == 'КВ':
+            return row['pickup_plan_date_f']
+        if shop_letter == 'ОС':
+            return row['shipping_plan_date_f']
+
+    def get_work_zinc(row, shop_letter):
+        if shop_letter == 'К':
+            return row['101_zinc']
+        if shop_letter == 'М':
+            return row['102_zinc']
+        if shop_letter == 'Ц':
+            return row['104_zinc']
+        if shop_letter == 'З':
+            return row['107_zinc']
+
+    def get_work_rubberizing(row):
+        return None
+
+    def get_order_finish(row):
+        if row['produced'] and row['ready_status']:
+            return row['ready_date']
+        # if row['produced'] and not row['ready_status']:
+        #     return 'Изготавливается и не готово'
+
+    col_1 = [] # Строка с названием товара
+    col_2 = [] # Cтрока с буквой цеха
+    col_3 = [] # Идентификатор заказа
+    col_4 = [] # Дата начала работ
+    col_5 = [] # Дата планового окончания работ
+    col_6 = [] # Дата планового цинкования
+    col_7 = [] # Дата планового обрезинивания
+    col_8 = [] # Дата планового старта заказа (Дата служебной записки)
+    col_9 = [] # Дата планового плановой отгрузки ОТ
+    col_10 = [] # Дата планового плановой отгрузки ДО
+    col_11 = [] # Дата планового поступления материала
+    col_12 = [] # Дата завершения заказа по факту
     for index, row in df.iterrows():
         col_1.append(get_product_name(row))
-        col_2.append(next(n_shop_symbol))
+        shop = next(n_shop_symbol)
+        col_2.append(shop)
         col_3.append(index)
+        col_4.append(get_work_start(row, shop))
+        col_5.append(get_work_end(row, shop))
+        col_6.append(get_work_zinc(row, shop))
+        col_7.append(get_work_rubberizing(row))
+        col_8.append(row['sn_date'])
+        col_9.append(row['shipment_from'])
+        col_10.append(row['shipment_before'])
+        col_11.append(row['material_plan_date'])
+        col_12.append(get_order_finish(row))
 
         col_1.append(get_info(row))
-        col_2.append(next(n_shop_symbol))
+        shop = next(n_shop_symbol)
+        col_2.append(shop)
         col_3.append(index)
+        col_4.append(get_work_start(row, shop))
+        col_5.append(get_work_end(row, shop))
+        col_6.append(get_work_zinc(row, shop))
+        col_7.append(get_work_rubberizing(row))
+        col_8.append(row['sn_date'])
+        col_9.append(row['shipment_from'])
+        col_10.append(row['shipment_before'])
+        col_11.append(row['material_plan_date'])
+        col_12.append(get_order_finish(row))
 
         col_1.append(get_counterparty(row))
-        col_2.append(next(n_shop_symbol))
+        shop = next(n_shop_symbol)
+        col_2.append(shop)
         col_3.append(index)
+        col_4.append(get_work_start(row, shop))
+        col_5.append(get_work_end(row, shop))
+        col_6.append(get_work_zinc(row, shop))
+        col_7.append(get_work_rubberizing(row))
+        col_8.append(row['sn_date'])
+        col_9.append(row['shipment_from'])
+        col_10.append(row['shipment_before'])
+        col_11.append(row['material_plan_date'])
+        col_12.append(get_order_finish(row))
 
         col_1.append(get_shipment_info(row))
-        col_2.append(next(n_shop_symbol))
+        shop = next(n_shop_symbol)
+        col_2.append(shop)
         col_3.append(index)
+        col_4.append(get_work_start(row, shop))
+        col_5.append(get_work_end(row, shop))
+        col_6.append(get_work_zinc(row, shop))
+        col_7.append(get_work_rubberizing(row))
+        col_8.append(row['sn_date'])
+        col_9.append(row['shipment_from'])
+        col_10.append(row['shipment_before'])
+        col_11.append(row['material_plan_date'])
+        col_12.append(get_order_finish(row))
 
         col_1.append(get_pickup_doc_info(row))
-        col_2.append(next(n_shop_symbol))
+        shop = next(n_shop_symbol)
+        col_2.append(shop)
         col_3.append(index)
+        col_4.append(get_work_start(row, shop))
+        col_5.append(get_work_end(row, shop))
+        col_6.append(get_work_zinc(row, shop))
+        col_7.append(get_work_rubberizing(row))
+        col_8.append(row['sn_date'])
+        col_9.append(row['shipment_from'])
+        col_10.append(row['shipment_before'])
+        col_11.append(row['material_plan_date'])
+        col_12.append(get_order_finish(row))
 
         col_1.append(get_shipping_doc_info(row))
-        col_2.append(next(n_shop_symbol))
+        shop = next(n_shop_symbol)
+        col_2.append(shop)
         col_3.append(index)
+        col_4.append(get_work_start(row, shop))
+        col_5.append(get_work_end(row, shop))
+        col_6.append(get_work_zinc(row, shop))
+        col_7.append(get_work_rubberizing(row))
+        col_8.append(row['sn_date'])
+        col_9.append(row['shipment_from'])
+        col_10.append(row['shipment_before'])
+        col_11.append(row['material_plan_date'])
+        col_12.append(get_order_finish(row))
 
-    frame = { 'Index': col_3, 'Product': col_1, 'Shop': col_2}
+    frame = {
+        'in_id': col_3, 
+        'product': col_1, 
+        'shop': col_2, 
+        'order_plan_start':col_8,
+        'work_start':col_4, 
+        'work_end':col_5, 
+        'zinc':col_6,
+        'rubberizing':col_7,
+        'material':col_11,
+        'order_plan_shipment_from':col_9,
+        'order_plan_shipment_before':col_10,
+        'order_finish':col_12,
+        }
+        
     result = pd.DataFrame(frame) 
     result.to_excel('testfiles\\Plan.xlsx')
 
