@@ -375,21 +375,36 @@ if __name__ == "__main__":
         start_time = time.time()
         return lambda x: print("[{:>7.2f}с.] {}".format(time.time() - start_time, x))
 
-    t = timing()
+    # t = timing() # [  24.87с.]       Конец выполнения
+    
+    # readyDf = readyReadFile(READY_FILE)
+    # t("{:>5} Готовые".format(len(readyDf)))
 
-    readyDf = readyReadFile(READY_FILE)
-    t("{:>5} Готовые".format(len(readyDf)))
+    # serviceNoteDf = serviceNoteReadFile(SN_FILE)
+    # t("{:>5} Служебные записки".format(len(serviceNoteDf)))
 
-    serviceNoteDf = serviceNoteReadFile(SN_FILE)
-    t("{:>5} Служебные записки".format(len(serviceNoteDf)))
+    # productionPlanDf = productionPlanReadFile(PRODUCTION_PLAN_FILE)
+    # t("{:>5} План производства".format(len(productionPlanDf)))
 
-    productionPlanDf = productionPlanReadFile(PRODUCTION_PLAN_FILE)
-    t("{:>5} План производства".format(len(productionPlanDf)))
+    # inDocumentDf = worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
+    # t("{:>5} Документация".format(len(inDocumentDf)))
 
-    inDocumentDf = worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
-    t("{:>5} Документация".format(len(inDocumentDf)))
+    # writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
+    # t("{:>5} Создал план".format(''))
 
-    writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
-    t("{:>5} Создал план".format(''))
+    # t("{:>5} Конец выполнения".format(''))
 
+    t = timing() #[  24.56с.]       Конец выполнения
+    import multiprocessing as mp
+    pool = mp.Pool(mp.cpu_count())
+
+    results = []
+    result_objects = [
+        pool.apply_async(readyReadFile, (READY_FILE,)),
+        pool.apply_async(serviceNoteReadFile, (SN_FILE,)),
+        pool.apply_async(productionPlanReadFile, (PRODUCTION_PLAN_FILE,)),
+        pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
+        ]
+    # print(result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get())
+    writeWorker([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
     t("{:>5} Конец выполнения".format(''))
