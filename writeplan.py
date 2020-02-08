@@ -102,47 +102,49 @@ def writeWorker(dflist):
             return 'Отгрузка: Не установлено'
 
     def get_pickup_doc_info(row):
-        returnstr = 'КВ: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y") 
-        if row['pickup_issue'] == False:
-            returnstr = '%s (Не нужны, %s)' % (returnstr, row['dispatcher_pickup_issue'])
-            return returnstr
-        else:
-            if not pd.isnull(row['pickup_date']):
-                # Дата прихода документации установлена
-                pickup_days = (row['pickup_plan_date_f'] - row['pickup_date']).days
-                pickup_str = '%sдн.' % pickup_days
-                if pickup_days > 0:
-                    return '%s (Получено на %s раньше)' % (returnstr, pickup_str)
-                else:
-                    return '%s (Получено на %s позже)' % (returnstr, pickup_str)
+        if not pd.isnull(row['pickup_plan_date_f']):
+            returnstr = 'КВ: %s' % row['pickup_plan_date_f'].strftime("%d.%m.%Y") 
+            if row['pickup_issue'] == False:
+                returnstr = '%s (Не нужны, %s)' % (returnstr, row['dispatcher_pickup_issue'])
+                return returnstr
             else:
-                pickup_days = (row['pickup_plan_date_f'] - pd.Timestamp.today()).days
-                if pickup_days > 0:
-                    return '%s (Осталось %sдн.)' % (returnstr, pickup_days)
+                if not pd.isnull(row['pickup_date']):
+                    # Дата прихода документации установлена
+                    pickup_days = (row['pickup_plan_date_f'] - row['pickup_date']).days
+                    pickup_str = '%sдн.' % pickup_days
+                    if pickup_days > 0:
+                        return '%s (Получено на %s раньше)' % (returnstr, pickup_str)
+                    else:
+                        return '%s (Получено на %s позже)' % (returnstr, pickup_str)
                 else:
-                    return '%s (Просрочено %sдн.)' % (returnstr, pickup_days)
+                    pickup_days = (row['pickup_plan_date_f'] - pd.Timestamp.today()).days
+                    if pickup_days > 0:
+                        return '%s (Осталось %sдн.)' % (returnstr, pickup_days)
+                    else:
+                        return '%s (Просрочено %sдн.)' % (returnstr, pickup_days)
 
     def get_shipping_doc_info(row):
         # return 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y")
-        returnstr = 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y") 
-        if row['shipping_issue'] == False:
-            returnstr = '%s (Не нужны, %s)' % (returnstr, row['dispatcher_shipping_issue'])
-            return returnstr
-        else:
-            if not pd.isnull(row['shipping_date']):
-                # Дата прихода документации установлена
-                shipping_days = (row['shipping_plan_date_f'] - row['shipping_date']).days
-                shipping_str = '%sдн.' % shipping_days
-                if shipping_days > 0:
-                    return '%s (Получено на %s раньше)' % (returnstr, shipping_str)
-                else:
-                    return '%s (Получено на %s позже)' % (returnstr, shipping_str)
+        if not pd.isnull(row['shipping_plan_date_f']):
+            returnstr = 'ОС: %s' % row['shipping_plan_date_f'].strftime("%d.%m.%Y") 
+            if row['shipping_issue'] == False:
+                returnstr = '%s (Не нужны, %s)' % (returnstr, row['dispatcher_shipping_issue'])
+                return returnstr
             else:
-                shipping_days = (row['shipping_plan_date_f'] - pd.Timestamp.today()).days
-                if shipping_days > 0:
-                    return '%s (Осталось %sдн.)' % (returnstr, shipping_days)
+                if not pd.isnull(row['shipping_date']):
+                    # Дата прихода документации установлена
+                    shipping_days = (row['shipping_plan_date_f'] - row['shipping_date']).days
+                    shipping_str = '%sдн.' % shipping_days
+                    if shipping_days > 0:
+                        return '%s (Получено на %s раньше)' % (returnstr, shipping_str)
+                    else:
+                        return '%s (Получено на %s позже)' % (returnstr, shipping_str)
                 else:
-                    return '%s (Просрочено %sдн.)' % (returnstr, shipping_days)
+                    shipping_days = (row['shipping_plan_date_f'] - pd.Timestamp.today()).days
+                    if shipping_days > 0:
+                        return '%s (Осталось %sдн.)' % (returnstr, shipping_days)
+                    else:
+                        return '%s (Просрочено %sдн.)' % (returnstr, shipping_days)
 
     def get_work_start(row, shop_letter):
         if shop_letter == 'К':
@@ -158,7 +160,7 @@ def writeWorker(dflist):
         if shop_letter == 'ОС':
             return row['sn_date']
         
-    def get_work_end(row, shop_letter):
+    def get_work_end_plan(row, shop_letter):
         if shop_letter == 'К':
             return row['101_end_date']
         if shop_letter == 'М':
@@ -191,6 +193,12 @@ def writeWorker(dflist):
         # if row['produced'] and not row['ready_status']:
         #     return 'Изготавливается и не готово'
 
+    def get_work_end_fact(row, shop_letter):
+        if shop_letter == 'КВ':
+            return row['pickup_date']
+        if shop_letter == 'ОС':
+            return row['shipping_date']
+
     col_1 = [] # Строка с названием товара
     col_2 = [] # Cтрока с буквой цеха
     col_3 = [] # Идентификатор заказа
@@ -203,13 +211,14 @@ def writeWorker(dflist):
     col_10 = [] # Дата планового плановой отгрузки ДО
     col_11 = [] # Дата планового поступления материала
     col_12 = [] # Дата завершения заказа по факту
+    col_13 = [] # Дата планового завершения работы
     for index, row in df.iterrows():
         col_1.append(get_product_name(row))
         shop = next(n_shop_symbol)
         col_2.append(shop)
         col_3.append(index)
         col_4.append(get_work_start(row, shop))
-        col_5.append(get_work_end(row, shop))
+        col_5.append(get_work_end_plan(row, shop))
         col_6.append(get_work_zinc(row, shop))
         col_7.append(get_work_rubberizing(row))
         col_8.append(row['sn_date'])
@@ -217,13 +226,14 @@ def writeWorker(dflist):
         col_10.append(row['shipment_before'])
         col_11.append(row['material_plan_date'])
         col_12.append(get_order_finish(row))
+        col_13.append(get_work_end_fact(row, shop))
 
         col_1.append(get_info(row))
         shop = next(n_shop_symbol)
         col_2.append(shop)
         col_3.append(index)
         col_4.append(get_work_start(row, shop))
-        col_5.append(get_work_end(row, shop))
+        col_5.append(get_work_end_plan(row, shop))
         col_6.append(get_work_zinc(row, shop))
         col_7.append(get_work_rubberizing(row))
         col_8.append(row['sn_date'])
@@ -231,13 +241,14 @@ def writeWorker(dflist):
         col_10.append(row['shipment_before'])
         col_11.append(row['material_plan_date'])
         col_12.append(get_order_finish(row))
+        col_13.append(get_work_end_fact(row, shop))
 
         col_1.append(get_counterparty(row))
         shop = next(n_shop_symbol)
         col_2.append(shop)
         col_3.append(index)
         col_4.append(get_work_start(row, shop))
-        col_5.append(get_work_end(row, shop))
+        col_5.append(get_work_end_plan(row, shop))
         col_6.append(get_work_zinc(row, shop))
         col_7.append(get_work_rubberizing(row))
         col_8.append(row['sn_date'])
@@ -245,13 +256,14 @@ def writeWorker(dflist):
         col_10.append(row['shipment_before'])
         col_11.append(row['material_plan_date'])
         col_12.append(get_order_finish(row))
+        col_13.append(get_work_end_fact(row, shop))
 
         col_1.append(get_shipment_info(row))
         shop = next(n_shop_symbol)
         col_2.append(shop)
         col_3.append(index)
         col_4.append(get_work_start(row, shop))
-        col_5.append(get_work_end(row, shop))
+        col_5.append(get_work_end_plan(row, shop))
         col_6.append(get_work_zinc(row, shop))
         col_7.append(get_work_rubberizing(row))
         col_8.append(row['sn_date'])
@@ -259,13 +271,14 @@ def writeWorker(dflist):
         col_10.append(row['shipment_before'])
         col_11.append(row['material_plan_date'])
         col_12.append(get_order_finish(row))
+        col_13.append(get_work_end_fact(row, shop))
 
         col_1.append(get_pickup_doc_info(row))
         shop = next(n_shop_symbol)
         col_2.append(shop)
         col_3.append(index)
         col_4.append(get_work_start(row, shop))
-        col_5.append(get_work_end(row, shop))
+        col_5.append(get_work_end_plan(row, shop))
         col_6.append(get_work_zinc(row, shop))
         col_7.append(get_work_rubberizing(row))
         col_8.append(row['sn_date'])
@@ -273,13 +286,14 @@ def writeWorker(dflist):
         col_10.append(row['shipment_before'])
         col_11.append(row['material_plan_date'])
         col_12.append(get_order_finish(row))
+        col_13.append(get_work_end_fact(row, shop))
 
         col_1.append(get_shipping_doc_info(row))
         shop = next(n_shop_symbol)
         col_2.append(shop)
         col_3.append(index)
         col_4.append(get_work_start(row, shop))
-        col_5.append(get_work_end(row, shop))
+        col_5.append(get_work_end_plan(row, shop))
         col_6.append(get_work_zinc(row, shop))
         col_7.append(get_work_rubberizing(row))
         col_8.append(row['sn_date'])
@@ -287,6 +301,7 @@ def writeWorker(dflist):
         col_10.append(row['shipment_before'])
         col_11.append(row['material_plan_date'])
         col_12.append(get_order_finish(row))
+        col_13.append(get_work_end_fact(row, shop))
 
     frame = {
         'in_id': col_3, 
@@ -294,7 +309,8 @@ def writeWorker(dflist):
         'shop': col_2, 
         'order_plan_start':col_8,
         'work_start':col_4, 
-        'work_end':col_5, 
+        'work_end_plan':col_5, 
+        'work_end_fact':col_13, 
         'zinc':col_6,
         'rubberizing':col_7,
         'material':col_11,
@@ -303,8 +319,8 @@ def writeWorker(dflist):
         'order_finish':col_12,
         }
         
-    result = pd.DataFrame(frame) 
-    result.to_excel('testfiles\\Plan.xlsx')
+    df = pd.DataFrame(frame)
+    df.to_excel('testfiles\\Plan.xlsx')
 
 if __name__ == "__main__":
     from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, PRODUCTION_PLAN_FILE, SHEDULE_FOLDER
