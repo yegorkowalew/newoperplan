@@ -40,10 +40,49 @@ def create_dataframe(dflist):
     # days_compl_pickup_plan "Дней на выполнение комплектовочных по плану.
     return df
 
-def writeWorker(dflist):
-    df = create_dataframe(dflist)
+
+def dates_to_header(df):
     min_date, max_date = findMinMaxDate(df)
 
+    # Добавить две строки
+    def append_rows(indf):
+        none_row = []
+        appended_rows = 2 # Число добавляемых срок для вставки, нужно будет изменить, если придется добавлять еще сроки кроме даты и дня недели
+        appended_rows = (appended_rows*-1)-1
+        none_row = []
+        for column in list(indf.columns.values):
+            none_row.append('')
+    
+        for ii in range(-1, appended_rows, -1):
+            indf.loc[ii] = none_row  # adding a row
+            indf.index = indf.index + 1  # shifting index
+        indf.sort_index(inplace=True)
+        indf = indf.reset_index(drop=True)
+        indf.index.name = 'x'
+        return indf
+
+    def generate_dates(min_date, max_date):
+        df = pd.DataFrame({
+            0:pd.date_range(min_date, max_date, freq='D')
+            })
+        df[1] = df[0].dt.dayofweek
+        days = {0:'пн',1:'вт',2:'ср',3:'чт',4:'пт',5:'сб',6:'вс'}
+        df[1] = df[1].apply(lambda x: days[x])
+        
+        df = df.T
+        df.index.name = 'x'
+        return df
+
+    result = pd.merge(
+        append_rows(df), 
+        generate_dates(min_date, max_date), 
+        on='x', 
+        how='outer'
+        )  # merge by x-column, u can use date column instead.
+    return result
+
+def writeWorker(dflist):
+    df = create_dataframe(dflist)
     # df.to_excel('testfiles\\out.xlsx')
 
     def get_product_name(row):
@@ -320,6 +359,7 @@ def writeWorker(dflist):
         }
         
     df = pd.DataFrame(frame)
+    df = dates_to_header(df)
     df.to_excel('testfiles\\Plan.xlsx')
 
 if __name__ == "__main__":
