@@ -35,7 +35,7 @@ def setup_shipment(df, row_index, dates_base):
     order_plan_start = df.loc[row_index, 'order_plan_start']
     if order_plan_start:
         days_count = True
-    if order_plan_shipment_from:
+    if not pd.isnull(order_plan_shipment_from):
         if days_count:
             order_plan_shipment_from_days = (order_plan_shipment_from - order_plan_start).days
             order_plan_shipment_before_days = (order_plan_shipment_before - order_plan_start).days
@@ -44,8 +44,15 @@ def setup_shipment(df, row_index, dates_base):
         dates_base = dates_base[(dates_base['dates'] >= order_plan_shipment_from) & (dates_base['dates'] <= order_plan_shipment_before)]
         df.loc[row_index, dates_base.index.to_list()] = 'S'
         if order_plan_shipment_from_days > 1:
-            df.loc[row_index, dates_base.index.to_list()[0]] = order_plan_shipment_from_days+1
-            df.loc[row_index, dates_base.index.to_list()[-1]] = order_plan_shipment_before_days+1
+            df.loc[row_index, dates_base.index[0]+1] = order_plan_shipment_from_days+1
+            df.loc[row_index, dates_base.index[-1]+1] = order_plan_shipment_before_days+1
+    else:
+        if days_count:
+            order_plan_shipment_before_days = (order_plan_shipment_before - order_plan_start).days
+        order_plan_shipment_before = pd.to_datetime(order_plan_shipment_before, format='%Y-%m-%d %H:%M:%S.%f')
+        dates_base = dates_base[dates_base['dates'] == order_plan_shipment_before]
+        df.loc[row_index, dates_base.index[0]] = 'S'
+        df.loc[row_index, dates_base.index[0]+1] = order_plan_shipment_before_days+1
 
 
 def appendDataWorker(df):
@@ -54,9 +61,8 @@ def appendDataWorker(df):
     })
     dates_base['dates'] = pd.to_datetime(dates_base['dates'])
     from itertools import islice
+    
     for index, row in islice(df.iterrows(), 2, None):
-    # for index, row in df.iterrows():
-        # print(index)
         setup_work_plan(df, index, dates_base)
         setup_order_plan_start(df, index, dates_base)
         setup_material(df, index, dates_base)
@@ -67,7 +73,6 @@ def appendDataWorker(df):
 if __name__ == "__main__":
     from writeplan import dates_to_header
     df = pd.DataFrame({
-        # 'x':[140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151],
         'in_id':[1285, 1285, 1285, 1285, 1285, 1285, 1286, 1286, 1286, 1286, 1286, 1286],
         'product':['СМВУА.73.06.К45.В12', '№Зк: 2311879, №СЗ: 369, Кол-во: 1.0', 'Заказчик: ФГ "ХЛІБ-АГРО"', 'Отгрузка: 12.02.2020-19.02.2020 (3-10дн.)', 'КВ: 02.12.2019 (Получено на -2дн. позже)', 'ОС: 02.12.2019 (Получено на -9дн. позже)', 'СМВУ.55.08.К45.В12.А', '№Зк: 2311880, №СЗ: 369, Кол-во: 1.0', 'Заказчик: ФГ "ХЛІБ-АГРО"', 'Отгрузка: 12.02.2020-19.02.2020 (3-10дн.)', 'КВ: 02.12.2019 (Получено на -8дн. позже)', 'ОС: 02.12.2019 (Получено на -10дн. позже)'],
         'shop':['Ц', 'М', 'К', 'З', 'КВ', 'ОС', 'Ц', 'М', 'К', 'З', 'КВ', 'ОС'],
@@ -78,7 +83,7 @@ if __name__ == "__main__":
         'zinc':['', '', '', '', '', '', '', '', '', '', '', ''],
         'rubberizing':['', '', '', '', '', '', '', '', '', '', '', ''],
         'material':['2019-12-22 00:00:00', '2019-12-22 00:00:00', '2019-12-22 00:00:00', '2019-12-22 00:00:00', '2019-12-22 00:00:00', '2019-12-22 00:00:00', '2019-12-27 00:00:00', '2019-12-27 00:00:00', '2019-12-27 00:00:00', '2019-12-27 00:00:00', '2019-12-27 00:00:00', '2019-12-27 00:00:00'],
-        'order_plan_shipment_from':['2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00'],
+        'order_plan_shipment_from':['2020-02-12 00:00:00', '', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00', '2020-02-12 00:00:00'],
         'order_plan_shipment_before':['2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00', '2020-02-19 00:00:00'],
         'order_finish':['', '', '', '', '', '', '', '', '', '', '', ''],
         })
