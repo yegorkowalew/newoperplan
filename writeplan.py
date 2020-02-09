@@ -360,7 +360,8 @@ def writeWorker(dflist):
         
     df = pd.DataFrame(frame)
     df = dates_to_header(df)
-    df.to_excel('testfiles\\Plan.xlsx')
+    # df.to_excel('testfiles\\Plan.xlsx')
+    return df
 
 if __name__ == "__main__":
     from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, PRODUCTION_PLAN_FILE, SHEDULE_FOLDER
@@ -368,6 +369,7 @@ if __name__ == "__main__":
     from readservicenote import serviceNoteReadFile
     from readproductionplan import productionPlanReadFile
     from readindocument import worker
+    from appenddata import appendDataWorker
 
     import time
     def timing():
@@ -375,7 +377,7 @@ if __name__ == "__main__":
         start_time = time.time()
         return lambda x: print("[{:>7.2f}с.] {}".format(time.time() - start_time, x))
 
-    # t = timing() # [  24.87с.]       Конец выполнения
+    # t = timing() # [  78.01с.]       Конец выполнения
     
     # readyDf = readyReadFile(READY_FILE)
     # t("{:>5} Готовые".format(len(readyDf)))
@@ -389,12 +391,14 @@ if __name__ == "__main__":
     # inDocumentDf = worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
     # t("{:>5} Документация".format(len(inDocumentDf)))
 
-    # writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
+    # df = writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
+    # df.to_excel('testfiles\\Plan.xlsx')
     # t("{:>5} Создал план".format(''))
-
+    # df = appendDataWorker(df)
+    # df.to_excel('testfiles\\AppendData.xlsx')
     # t("{:>5} Конец выполнения".format(''))
 
-    t = timing() #[  24.56с.]       Конец выполнения
+    t = timing() #[  76.51с.]       Конец выполнения
     import multiprocessing as mp
     pool = mp.Pool(mp.cpu_count())
 
@@ -406,5 +410,8 @@ if __name__ == "__main__":
         pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
         ]
     # print(result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get())
-    writeWorker([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
+    df = writeWorker([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
+    df.to_excel('testfiles\\Plan.xlsx')
+    df = appendDataWorker(df)
+    df.to_excel('testfiles\\AppendData.xlsx')
     t("{:>5} Конец выполнения".format(''))
