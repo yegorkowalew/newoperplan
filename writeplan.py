@@ -24,7 +24,9 @@ def findMinMaxDate(df):
         except:
             pass
     max_date = pd.to_datetime(pd.Series(maxDates), errors='coerce').max()
+    max_date = max_date + pd.DateOffset(1)
     min_date = pd.to_datetime(pd.Series(minDates), errors='coerce').min()
+    min_date = min_date - pd.DateOffset(1)
     return min_date, max_date
 
 def create_dataframe(dflist):
