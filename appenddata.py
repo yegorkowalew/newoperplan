@@ -27,7 +27,7 @@ def setup_work_plan(df, row_index, dates_base):
         dates_base = dates_base[(dates_base['dates'] >= work_start) & (dates_base['dates'] <= work_end_plan)]
         df.loc[row_index, dates_base.index.to_list()] = shop
         if (work_end_plan - work_start).days > 1:
-            df.loc[row_index, dates_base.index.to_list()[-1]] = (work_end_plan - work_start).days+1
+            df.loc[row_index, dates_base.index.to_list()[-1]+1] = (work_end_plan - work_start).days+1
 
 def setup_shipment(df, row_index, dates_base):
     order_plan_shipment_from = df.loc[row_index, 'order_plan_shipment_from']
