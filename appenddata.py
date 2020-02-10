@@ -66,9 +66,9 @@ def appendDataWorker(df):
         if not pd.isnull(row['order_plan_start']):
             # Если не установлена дата СЗ, то запускать установку дней не будем
             setup_order_plan_start(df, index, dates_base)
+            setup_shipment(df, index, dates_base)
             setup_work_plan(df, index, dates_base)
             setup_material(df, index, dates_base)
-            setup_shipment(df, index, dates_base)
         else:
             print('Дата начала работ (СЗ) не установлена')
     
