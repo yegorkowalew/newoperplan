@@ -236,9 +236,15 @@ def writeWorker(dflist):
 
     def get_work_end_fact(row, shop_letter):
         if shop_letter == 'КВ':
-            return row['pickup_date']
+            if row['pickup_issue'] == False:
+                return row['sn_date']
+            else:
+                return row['pickup_date']
         if shop_letter == 'ОС':
-            return row['shipping_date']
+            if row['shipping_issue'] == False:
+                return row['sn_date']
+            else:
+                return row['shipping_date']
 
     col_1 = [] # Строка с названием товара
     col_2 = [] # Cтрока с буквой цеха
@@ -252,7 +258,7 @@ def writeWorker(dflist):
     col_10 = [] # Дата планового плановой отгрузки ДО
     col_11 = [] # Дата планового поступления материала
     col_12 = [] # Дата завершения заказа по факту
-    col_13 = [] # Дата планового завершения работы
+    col_13 = [] # Дата завершения работы цеха
     for index, row in df.iterrows():
         col_1.append(get_product_name(row))
         shop = next(n_shop_symbol)
