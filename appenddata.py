@@ -21,6 +21,7 @@ def setup_work_plan(df, row_index, dates_base):
     work_start = df.loc[row_index, 'work_start']
     work_end_plan = df.loc[row_index, 'work_end_plan']
     work_end_fact = df.loc[row_index, 'work_end_fact']
+    today = pd.to_datetime('2020-02-10 00:00:00', format='%Y-%m-%d %H:%M:%S.%f')
     shop = df.loc[row_index, 'shop']
     if work_start:
         work_start = pd.to_datetime(work_start, format='%Y-%m-%d %H:%M:%S.%f')
@@ -32,9 +33,21 @@ def setup_work_plan(df, row_index, dates_base):
     if not pd.isnull(work_end_fact):
         work_end_fact = pd.to_datetime(work_end_fact, format='%Y-%m-%d %H:%M:%S.%f')
         dates_base_list = dates_base[(dates_base['dates'] > work_end_plan) & (dates_base['dates'] <= work_end_fact)]
+        # print(dates_base_list.index, '<<<<<')
         df.loc[row_index, dates_base_list.index[1:]] = 'X'
         if (work_end_fact - work_end_plan).days > 1:
             df.loc[row_index, dates_base_list.index[-1]+1] = (work_end_fact - work_end_plan).days
+    if pd.isnull(work_end_fact):
+        # work_end_fact = pd.to_datetime(work_end_fact, format='%Y-%m-%d %H:%M:%S.%f')
+        work_end_plan = pd.to_datetime(work_end_plan, format='%Y-%m-%d %H:%M:%S.%f')
+        # today
+        if (today - work_end_plan).days > 1:
+            # print(today, ' - ' ,work_end_plan, ' - ', (today - work_end_plan).days)
+            dates_base_list = dates_base[(dates_base['dates'] > work_end_plan) & (dates_base['dates'] <= today)]
+            # print(dates_base_list.index.to_list())
+            df.loc[row_index, dates_base_list.index[1:]] = '>'
+            df.loc[row_index, dates_base_list.index[-1]+1] = (today - work_end_plan).days
+            # print('----------------------')
 
 
 def setup_shipment(df, row_index, dates_base):
@@ -61,7 +74,6 @@ def setup_shipment(df, row_index, dates_base):
         dates_base_list = dates_base[dates_base['dates'] == order_plan_shipment_before]
         df.loc[row_index, dates_base_list.index[0]] = 'S'
         df.loc[row_index, dates_base_list.index[0]+1] = order_plan_shipment_before_days+1
-
 
 def appendDataWorker(df):
     dates_base = pd.DataFrame({
