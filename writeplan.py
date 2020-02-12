@@ -407,8 +407,11 @@ if __name__ == "__main__":
     # t("{:>5} Конец выполнения".format(''))
 
     t = timing() #[  76.51с.]       Конец выполнения
-    import multiprocessing as mp
-    pool = mp.Pool(mp.cpu_count())
+    # import multiprocessing as mp
+    # pool = mp.Pool(mp.cpu_count())
+    from multiprocessing import Pool
+    from multiprocessing.dummy import Pool as ThreadPool
+    pool = ThreadPool()
 
     results = []
     result_objects = [
