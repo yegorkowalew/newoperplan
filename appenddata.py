@@ -33,22 +33,15 @@ def setup_work_plan(df, row_index, dates_base):
     if not pd.isnull(work_end_fact):
         work_end_fact = pd.to_datetime(work_end_fact, format='%Y-%m-%d %H:%M:%S.%f')
         dates_base_list = dates_base[(dates_base['dates'] > work_end_plan) & (dates_base['dates'] <= work_end_fact)]
-        # print(dates_base_list.index, '<<<<<')
         df.loc[row_index, dates_base_list.index[1:]] = 'X'
         if (work_end_fact - work_end_plan).days > 1:
             df.loc[row_index, dates_base_list.index[-1]+1] = (work_end_fact - work_end_plan).days
     if pd.isnull(work_end_fact):
-        # work_end_fact = pd.to_datetime(work_end_fact, format='%Y-%m-%d %H:%M:%S.%f')
         work_end_plan = pd.to_datetime(work_end_plan, format='%Y-%m-%d %H:%M:%S.%f')
-        # today
         if (today - work_end_plan).days > 1:
-            # print(today, ' - ' ,work_end_plan, ' - ', (today - work_end_plan).days)
             dates_base_list = dates_base[(dates_base['dates'] > work_end_plan) & (dates_base['dates'] <= today)]
-            # print(dates_base_list.index.to_list())
             df.loc[row_index, dates_base_list.index[1:]] = '>'
             df.loc[row_index, dates_base_list.index[-1]+1] = (today - work_end_plan).days
-            # print('----------------------')
-
 
 def setup_shipment(df, row_index, dates_base):
     order_plan_shipment_from = df.loc[row_index, 'order_plan_shipment_from']

@@ -45,8 +45,8 @@ def shedule_files_read(files):
             wb = load_workbook(filename=xls_file, read_only=True)
             ws = wb['График']
             cell_value = ws.cell(row=3, column=3).value
-            if len(str(cell_value)) != 7:
-                # print(xls_file)
+            if (len(str(cell_value)) != 7) and (len(str(cell_value)) != 9):
+                # print(cell_value)
                 error_files.append({
                     # 'dispatcher':xls_file.split('\\')[-3].split(' - ')[-1],
                     'dispatcher':get_dispatcher_from_path(xls_file),
