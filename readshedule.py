@@ -64,14 +64,24 @@ def shedule_files_read(files):
                     'date_modification': c_m_dates[1],
                     })
         except BaseException as identifier:
-            # print(identifier)
-            # print(xls_file.split('\\')[-3].split(' - ')[-1])
-            error_files.append({
-                # 'dispatcher':xls_file.split('\\')[-3].split(' - ')[-1],
-                'dispatcher':get_dispatcher_from_path(xls_file),
-                'file_path':xls_file,
-                'error':identifier,
-            })
+            if identifier.args[0] == 'File is not a zip file':
+                # Попытка удалить файл
+                try:
+                    print('Удаляю - %s' % xls_file)
+                    os.remove(xls_file)
+                except BaseException as identifier:
+                    print('Не получилось - %s' % identifier)
+                    error_files.append({
+                        'dispatcher':get_dispatcher_from_path(xls_file),
+                        'file_path':xls_file,
+                        'error':identifier,
+                    })
+            else:
+                error_files.append({
+                    'dispatcher':get_dispatcher_from_path(xls_file),
+                    'file_path':xls_file,
+                    'error':identifier,
+                })
     return correct_files, error_files
 
 def sheduleWorker(folder):
