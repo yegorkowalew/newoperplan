@@ -34,14 +34,40 @@ def colorsWrite(df):
     rows_count = len(df.count(axis='columns'))
     columns_count = len(df.count(axis='rows'))
     first_date = get_first_date()
+
+    # import pandas.io.formats.excel
+    # import pandas.core.format
+
+
     writer = pd.ExcelWriter('testfiles\\AppendDataColors.xlsx', 
         engine='xlsxwriter',
         datetime_format='dd.mm.yyyy',
         date_format='dd.mm.yyyy'
         )
+    # pd.io.formats.excel.header_style = None
+    # pd.core.format.header_style = None
     df.to_excel(writer, sheet_name='План производства')
     workbook  = writer.book
     worksheet = writer.sheets['План производства']
+
+    header_format = workbook.add_format({
+        'valign': 'top',
+        'num_format': 'dd.mm.yy',
+        'font_size': 10,
+        'rotation':90
+        })
+
+    # Установить стиль для первой строки
+    # for col_num, value in enumerate(df.columns.values):
+    #     worksheet.write(0, col_num + 1, value, header_format)
+
+    first_row = df.loc[:0].values.tolist()[0]
+    for col_num, value in enumerate(first_row):
+        try:
+            worksheet.write(1, col_num + 1, value, header_format)
+        except:
+            pass
+
     cfmt_all = workbook.add_format({'font_size': 10})
     cfmt_header_col = workbook.add_format({'font_size': 10})
     
@@ -99,7 +125,7 @@ def colorsWrite(df):
     # worksheet.set_column(20, 20, 3, cfmt_sunday_col)
     worksheet.freeze_panes(3, first_date) # Закрепление областей на странице
     # TODO
-    # - Повернуть строку дат на 90
+    # - Повернуть строку дат на 90 (Готово)
     # - Найти сегодняшнюю дату
     # - Выделить столбец сегодняшней даты
     # - Свернуть столбцы от начала до 21 день до сегодняшней даты
@@ -108,6 +134,9 @@ def colorsWrite(df):
     # - Высота строк всей таблицы 12
     # - Сетка для все таблицы кроме названий
     # - Отдельный лист с легендой
+
+    # cfmt_SZ = workbook.add_format({'color': '#f0800a', 'bg_color':'#fde9d9'})
+    # worksheet.set_row(1, 100, cfmt_SZ)
 
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
     writer.save()
