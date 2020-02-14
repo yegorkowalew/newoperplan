@@ -133,20 +133,27 @@ def colorsWrite(df):
     # - Повернуть строку дат на 90 (Готово)
     # - Выделить столбец сегодняшней даты (Выделил ячейку сегодняшней даты)
     # - Свернуть столбцы от начала до 21 день до сегодняшней даты (Работает с ньюансами, нужно сворачивать два отрезка)
+    # - Устоновить высоту строк таблицы (Готово)
+    # - Отдельный лист с легендой (Готово, не до конца)
 
     # - Установить в ячейках "автоподбор ширины"
-    # - Устоновить высоту строк таблицы 
-    # - Высота строк всей таблицы 12
     # - Сетка для все таблицы кроме названий
-    # - Отдельный лист с легендой
 
     # Высота строки 13
     for i in range(3, rows_count+1):
         worksheet.set_row(i, 13)
-
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
+
+    # Лист легенды
+    worksheet_legend = workbook.add_worksheet('Легенда')  # Data.writer.sheets['Легенда']
+    from settings import legend
+    num = 0
+    for key, text in legend.items():
+        worksheet_legend.write(num, 0, key)
+        worksheet_legend.write(num, 1, text)
+        num += 1
+
     writer.save()
-    return writer
 
 if __name__ == "__main__":
     import time
@@ -156,5 +163,5 @@ if __name__ == "__main__":
         return lambda x: print("[{:>7.2f}с.] {}".format(time.time() - start_time, x))
     t = timing()
     df = readAppendData('testfiles\\AppendData.xlsx')
-    df = colorsWrite(df)
+    colorsWrite(df)
     t("{:>5} Конец выполнения".format(''))
