@@ -6,6 +6,7 @@
 import pandas as pd
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
+import datetime
 
 def readAppendData(a_file):
     try:
@@ -46,24 +47,34 @@ def colorsWrite(df):
     worksheet = writer.sheets['План производства']
 
     header_format = workbook.add_format({
-        'valign': 'top',
         'num_format': 'dd.mm.yy',
         'font_size': 10,
-        'rotation':90
+        'rotation':90,
+        'valign':'bottom'
+        })
+    header_format_today = workbook.add_format({
+        'num_format': 'dd.mm.yy',
+        'font_size': 10,
+        'rotation':90,
+        'bg_color':'red',
+        'color':'white',
+        'bold':True,
+        'valign':'bottom'
         })
 
     # Установить стиль для первой строки
-    # for col_num, value in enumerate(df.columns.values):
+    # for col_num, value `in enumerate(df.columns.values):
     #     worksheet.write(0, col_num + 1, value, header_format)
     
-    import datetime
-    top_date_format1 = workbook.add_format({'bg_color':'#FFC7CE','font_color':'#9C0006'})
     date = datetime.datetime.strptime('2020-02-14', "%Y-%m-%d")
 
     first_row = df.loc[:0].values.tolist()[0]
     for col_num, value in enumerate(first_row):
         try:
-            worksheet.write(1, col_num + 1, value, header_format)
+            if date == value:
+                worksheet.write(1, col_num + 1, value, header_format_today)
+            else:
+                worksheet.write(1, col_num + 1, value, header_format)
         except:
             pass
 
@@ -90,7 +101,7 @@ def colorsWrite(df):
     worksheet.set_column(0,1, 0) # Первые два столбца индекс и ин_айди
     worksheet.set_column(2,2, 60, cfmt_header_col) # Столбец с названием 
     worksheet.set_column(3,3, 2, cfmt_header_col) # Столбец цеха
-    worksheet.set_column(4,13,0, cfmt_header_col) # Столбцы дат
+    worksheet.set_column(4,15,0, cfmt_header_col) # Столбцы дат
     worksheet.set_column(first_date, columns_count, 2) # График
     
     worksheet.set_row(0, None, None, {'hidden': True})
@@ -125,25 +136,14 @@ def colorsWrite(df):
     worksheet.freeze_panes(3, first_date) # Закрепление областей на странице
     # TODO
     # - Повернуть строку дат на 90 (Готово)
-    
-    # - Выделить столбец сегодняшней даты
-    # import datetime
-    # format1 = workbook.add_format({'bg_color':'#FFC7CE','font_color':'#9C0006'})
-    # date = datetime.datetime.strptime('2020-02-14', "%Y-%m-%d")
-    # worksheet.conditional_format('$1:$1048576', {'type':'cell', 'criteria':'=', 'value':'"A$2=43875"', 'format':cfmt_name_row})
-    
+    # - Выделить столбец сегодняшней даты (Выделил ячейку сегодняшней даты)
+
     # - Свернуть столбцы от начала до 21 день до сегодняшней даты
     # - Установить в ячейках "автоподбор ширины"
     # - Устоновить высоту строк таблицы 
     # - Высота строк всей таблицы 12
     # - Сетка для все таблицы кроме названий
     # - Отдельный лист с легендой
-    # worksheet.conditional_format('$2:$2', {'type':'time_period','criteria':'yesterday', 'format':format1})
-    # worksheet.conditional_format('A1:A4', {'type':     'date',
-    #                                     'criteria': 'equal to',
-    #                                     'value':    date,
-    #                                     'format':   format1})
-
 
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
     writer.save()
