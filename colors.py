@@ -1,6 +1,6 @@
 
 """
-Готовые заказы
+Генерация итогового файла
 
 """
 import pandas as pd
@@ -16,66 +16,11 @@ def readAppendData(a_file):
             index_col=0
         )
     except Exception as ind:
-        # logger.error("serviceNoteReadFile error with file: %s - %s" % (sn_file, ind))
         print("serviceNoteReadFile error with file: %s - %s" % (a_file, ind))
     else:
         return df
 
 def colorsWrite(df):
-    # Установка параметров для всей таблицы
-    # df = df.style.set_properties(**{
-    #     'font-size': '10pt',
-    #     # 'datetime_format':'%d%m%Y'
-    # })
-
-    # Скрыть столбцы
-    # df = df.style.hide_columns(['order_plan_start', 'work_start', 'work_end_plan', 'work_end_fact', 'zinc', 'rubberizing', 'material', 'order_plan_shipment_from', 'order_plan_shipment_before', 'order_finish'])
-    
-    # df = df.style.hide_index()
-    # df = df.style.highlight_max(axis=0)
-    # Формат даты для столбцов
-    # df = df.style.set_properties(color="white", align="right")
-    # df = df.style.set_properties(**{'background-color': 'yellow'})
-    # def letter_color(value):
-    #     if value == 'Ц':
-    #         return 'color: #d6a300; background-color:#fff2c8; text-align: center'
-    #     elif value == 'М':
-    #         return 'color: #548235; background-color:#e2efda; text-align: center'
-    #     elif value == 'К':
-    #         return 'color: #2f75b5; background-color:#ddebf7; text-align: center'
-    #     elif value == 'З':
-    #         return 'color: #000000; background-color:#8ea9db; text-align: center'
-    #     elif value == 'КВ':
-    #         return 'color: #215967; background-color:#daeef3; text-align: center'
-    #     elif value == 'ОС':
-    #         return 'color: #5b3151; background-color:#e4dfec; text-align: center'
-    #     elif value == 'X':
-    #         return 'color: #c05065; background-color:#ff8596; text-align: center'
-    #     elif value == '>':
-    #         return 'color: #963634; background-color:#fde9d9; text-align: center'
-    #     elif value == 'СЗ':
-    #         return 'color: #f0800a; background-color:#fde9d9; text-align: center'
-    #     elif value == 'm':
-    #         return 'color: #a6afc0; background-color:#d9d9d9; text-align: center'
-    #     elif value == 'S':
-    #         return 'color: #ff7979; background-color:#ffafaf; text-align: center'
-    #     else:
-    #         return 'color:black'
-
-    # def highlight_greaterthan_1(x):
-    #     if x['shop'] == 'ОС':
-    #         return ['border-bottom-width:1px; border-bottom-color:#0010a7' for v in x]
-    #     else:
-    #         return ['border-bottom-width:1px; border-bottom-color:#cacaca' for v in x]
-
-
-    # df = df.style \
-    # .applymap(letter_color) \
-    # .format({'total_amt_usd_pct_diff': "{:.2%}"}) \
-    # .set_properties(**{'font-size': '10pt; vertical-align: middle'}) \
-    # .apply(highlight_greaterthan_1, axis=1) \
-    # .hide_index()
-
     #### Индексы
     def get_first_date():
         header_list = list(df.columns.values)
@@ -134,7 +79,6 @@ def colorsWrite(df):
     shop_dates_range = '%s:%s' % (xl_rowcol_to_cell(shop_col_num, 0), dates_range_fin)
     zz = '%s:%s' % (xl_rowcol_to_cell(0, first_date), dates_range_fin)
     za = '$C1'
-    print(za)
     worksheet.conditional_format(3, first_date, rows_count, columns_count,{'type':'cell', 'criteria':'=', 'value':'"СЗ"', 'format':cfmt_SZ,})
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'"Ц"', 'format':cfmt_C, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'"М"', 'format':cfmt_M, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
@@ -146,15 +90,25 @@ def colorsWrite(df):
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'">"', 'format':cfmt_TORIGHT, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'"m"', 'format':cfmt_m, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'"S"', 'format':cfmt_S, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
-    worksheet.conditional_format(zz, {'type':'formula', 'criteria': '=O$3="сб"', 'format': cfmt_sunday_col})#'=$A$1>5'
-    worksheet.conditional_format(zz, {'type':'formula', 'criteria': '=O$3="вс"', 'format': cfmt_sunday_col})#'=$A$1>5'
-    worksheet.conditional_format(shop_dates_range, {'type':'formula', 'criteria': '=$%s="ОС"' % shop_range_col_letters , 'format': cfmt_product_bottom_line})#'=$A$1>5'
+    worksheet.conditional_format(zz, {'type':'formula', 'criteria': '=O$3="сб"', 'format': cfmt_sunday_col})
+    worksheet.conditional_format(zz, {'type':'formula', 'criteria': '=O$3="вс"', 'format': cfmt_sunday_col})
+    worksheet.conditional_format(shop_dates_range, {'type':'formula', 'criteria': '=$%s="ОС"' % shop_range_col_letters , 'format': cfmt_product_bottom_line})
 
     worksheet.conditional_format(za, {'type':'cell', 'criteria':'=', 'value':'"Ц"', 'format':cfmt_name_row})
     
     # worksheet.set_column(20, 20, 3, cfmt_sunday_col)
-    worksheet.freeze_panes(3, first_date)
-    worksheet.write_comment(2, 2, 'This is a comment \n New Comment', {'color': '#daeef3'}) # Комментарий 
+    worksheet.freeze_panes(3, first_date) # Закрепление областей на странице
+    # TODO
+    # - Повернуть строку дат на 90
+    # - Найти сегодняшнюю дату
+    # - Выделить столбец сегодняшней даты
+    # - Свернуть столбцы от начала до 21 день до сегодняшней даты
+    # - Установить в ячейках "автоподбор ширины"
+    # - Устоновить высоту строк таблицы 
+    # - Высота строк всей таблицы 12
+    # - Сетка для все таблицы кроме названий
+    # - Отдельный лист с легендой
+
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
     writer.save()
     return writer
@@ -168,5 +122,4 @@ if __name__ == "__main__":
     t = timing()
     df = readAppendData('testfiles\\AppendData.xlsx')
     df = colorsWrite(df)
-    # df.to_excel("testfiles\\AppendDataColors.xlsx", engine='xlsxwriter')
     t("{:>5} Конец выполнения".format(''))
