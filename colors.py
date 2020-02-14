@@ -66,6 +66,8 @@ def colorsWrite(df):
         except:
             pass
     
+    worksheet.set_default_row(hide_unused_rows=True)
+
     cfmt_all = workbook.add_format({'font_size': 10})
     cfmt_header_col = workbook.add_format({'font_size': 10})
     
@@ -126,7 +128,6 @@ def colorsWrite(df):
 
     worksheet.conditional_format(za, {'type':'cell', 'criteria':'=', 'value':'"Ц"', 'format':cfmt_name_row})
     
-    # worksheet.set_column(20, 20, 3, cfmt_sunday_col)
     worksheet.freeze_panes(3, first_date) # Закрепление областей на странице
     # TODO
     # - Повернуть строку дат на 90 (Готово)
@@ -138,6 +139,10 @@ def colorsWrite(df):
     # - Высота строк всей таблицы 12
     # - Сетка для все таблицы кроме названий
     # - Отдельный лист с легендой
+
+    # Высота строки 13
+    for i in range(3, rows_count+1):
+        worksheet.set_row(i, 13)
 
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
     writer.save()
