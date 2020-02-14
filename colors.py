@@ -35,17 +35,12 @@ def colorsWrite(df):
     columns_count = len(df.count(axis='rows'))
     first_date = get_first_date()
 
-    # import pandas.io.formats.excel
-    # import pandas.core.format
-
-
     writer = pd.ExcelWriter('testfiles\\AppendDataColors.xlsx', 
         engine='xlsxwriter',
         datetime_format='dd.mm.yyyy',
         date_format='dd.mm.yyyy'
         )
-    # pd.io.formats.excel.header_style = None
-    # pd.core.format.header_style = None
+
     df.to_excel(writer, sheet_name='План производства')
     workbook  = writer.book
     worksheet = writer.sheets['План производства']
@@ -60,6 +55,10 @@ def colorsWrite(df):
     # Установить стиль для первой строки
     # for col_num, value in enumerate(df.columns.values):
     #     worksheet.write(0, col_num + 1, value, header_format)
+    
+    import datetime
+    top_date_format1 = workbook.add_format({'bg_color':'#FFC7CE','font_color':'#9C0006'})
+    date = datetime.datetime.strptime('2020-02-14', "%Y-%m-%d")
 
     first_row = df.loc[:0].values.tolist()[0]
     for col_num, value in enumerate(first_row):
@@ -126,17 +125,25 @@ def colorsWrite(df):
     worksheet.freeze_panes(3, first_date) # Закрепление областей на странице
     # TODO
     # - Повернуть строку дат на 90 (Готово)
-    # - Найти сегодняшнюю дату
+    
     # - Выделить столбец сегодняшней даты
+    # import datetime
+    # format1 = workbook.add_format({'bg_color':'#FFC7CE','font_color':'#9C0006'})
+    # date = datetime.datetime.strptime('2020-02-14', "%Y-%m-%d")
+    # worksheet.conditional_format('$1:$1048576', {'type':'cell', 'criteria':'=', 'value':'"A$2=43875"', 'format':cfmt_name_row})
+    
     # - Свернуть столбцы от начала до 21 день до сегодняшней даты
     # - Установить в ячейках "автоподбор ширины"
     # - Устоновить высоту строк таблицы 
     # - Высота строк всей таблицы 12
     # - Сетка для все таблицы кроме названий
     # - Отдельный лист с легендой
+    # worksheet.conditional_format('$2:$2', {'type':'time_period','criteria':'yesterday', 'format':format1})
+    # worksheet.conditional_format('A1:A4', {'type':     'date',
+    #                                     'criteria': 'equal to',
+    #                                     'value':    date,
+    #                                     'format':   format1})
 
-    # cfmt_SZ = workbook.add_format({'color': '#f0800a', 'bg_color':'#fde9d9'})
-    # worksheet.set_row(1, 100, cfmt_SZ)
 
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
     writer.save()
