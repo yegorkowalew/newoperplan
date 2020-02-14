@@ -46,21 +46,8 @@ def colorsWrite(df):
     workbook  = writer.book
     worksheet = writer.sheets['План производства']
 
-    header_format = workbook.add_format({
-        'num_format': 'dd.mm.yy',
-        'font_size': 10,
-        'rotation':90,
-        'valign':'bottom'
-        })
-    header_format_today = workbook.add_format({
-        'num_format': 'dd.mm.yy',
-        'font_size': 10,
-        'rotation':90,
-        'bg_color':'red',
-        'color':'white',
-        'bold':True,
-        'valign':'bottom'
-        })
+    header_format = workbook.add_format({'num_format': 'dd.mm.yy','font_size': 10,'rotation':90,'valign':'bottom'})
+    header_format_today = workbook.add_format({'num_format': 'dd.mm.yy','font_size': 10,'rotation':90,'bg_color':'red','color':'white','bold':True,'valign':'bottom'})
 
     # Установить стиль для первой строки
     # for col_num, value `in enumerate(df.columns.values):
@@ -73,11 +60,12 @@ def colorsWrite(df):
         try:
             if date == value:
                 worksheet.write(1, col_num + 1, value, header_format_today)
+                twenty_days_ago_ind = (col_num + 1)-21
             else:
                 worksheet.write(1, col_num + 1, value, header_format)
         except:
             pass
-
+    
     cfmt_all = workbook.add_format({'font_size': 10})
     cfmt_header_col = workbook.add_format({'font_size': 10})
     
@@ -102,10 +90,8 @@ def colorsWrite(df):
     worksheet.set_column(2,2, 60, cfmt_header_col) # Столбец с названием 
     worksheet.set_column(3,3, 2, cfmt_header_col) # Столбец цеха
     worksheet.set_column(4,15,0, cfmt_header_col) # Столбцы дат
-    worksheet.set_column(first_date, columns_count, 2) # График
     
     worksheet.set_row(0, None, None, {'hidden': True})
-    
     # Даты в буквы
     shop_col_num = 3 # Номер столбца shop
     dates_range_letters = '%s:%s' % (xl_rowcol_to_cell(shop_col_num, first_date), xl_rowcol_to_cell(rows_count, columns_count)) # отрезок с буквами
@@ -115,6 +101,14 @@ def colorsWrite(df):
     shop_dates_range = '%s:%s' % (xl_rowcol_to_cell(shop_col_num, 0), dates_range_fin)
     zz = '%s:%s' % (xl_rowcol_to_cell(0, first_date), dates_range_fin)
     za = '$C1'
+
+    # Сворачивание столбцов
+    if twenty_days_ago_ind:
+        worksheet.set_column(twenty_days_ago_ind, columns_count, 2) # График
+        worksheet.set_column(first_date, twenty_days_ago_ind, None, None, {'hidden': True})
+    else:
+        worksheet.set_column(first_date, columns_count, 2) # График
+
     worksheet.conditional_format(3, first_date, rows_count, columns_count,{'type':'cell', 'criteria':'=', 'value':'"СЗ"', 'format':cfmt_SZ,})
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'"Ц"', 'format':cfmt_C, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
     worksheet.conditional_format(dates_range_letters, {'type':'cell', 'criteria':'=', 'value':'"М"', 'format':cfmt_M, 'multi_range': '%s %s' % (dates_range_letters, shop_range_letters)})
@@ -137,8 +131,8 @@ def colorsWrite(df):
     # TODO
     # - Повернуть строку дат на 90 (Готово)
     # - Выделить столбец сегодняшней даты (Выделил ячейку сегодняшней даты)
+    # - Свернуть столбцы от начала до 21 день до сегодняшней даты (Работает с ньюансами, нужно сворачивать два отрезка)
 
-    # - Свернуть столбцы от начала до 21 день до сегодняшней даты
     # - Установить в ячейках "автоподбор ширины"
     # - Устоновить высоту строк таблицы 
     # - Высота строк всей таблицы 12
