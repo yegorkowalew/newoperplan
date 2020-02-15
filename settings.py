@@ -1,3 +1,7 @@
+from datetime import datetime
+
+# TODAY = datetime.strptime('2020-02-14', "%Y-%m-%d")
+TODAY = datetime.now()
 
 ## Файл служебных записок
 SN_FILE = 'C:\\work\\newoperplan\\testfiles\\Служебные записки.xlsx'

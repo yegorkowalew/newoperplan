@@ -2,6 +2,7 @@ import itertools
 import pandas as pd
 import datetime
 from datetime import datetime
+from settings import TODAY
 
 def setup_order_plan_start(df, row_index, dates_base):
     order_plan_start = df.loc[row_index, 'order_plan_start']
@@ -21,7 +22,7 @@ def setup_work_plan(df, row_index, dates_base):
     work_start = df.loc[row_index, 'work_start']
     work_end_plan = df.loc[row_index, 'work_end_plan']
     work_end_fact = df.loc[row_index, 'work_end_fact']
-    today = pd.to_datetime('2020-02-10 00:00:00', format='%Y-%m-%d %H:%M:%S.%f')
+    # TODAY = pd.to_datetime('2020-02-10 00:00:00', format='%Y-%m-%d %H:%M:%S.%f')
     shop = df.loc[row_index, 'shop']
     if work_start:
         work_start = pd.to_datetime(work_start, format='%Y-%m-%d %H:%M:%S.%f')
@@ -38,10 +39,10 @@ def setup_work_plan(df, row_index, dates_base):
             df.loc[row_index, dates_base_list.index[-1]+1] = (work_end_fact - work_end_plan).days
     if pd.isnull(work_end_fact):
         work_end_plan = pd.to_datetime(work_end_plan, format='%Y-%m-%d %H:%M:%S.%f')
-        if (today - work_end_plan).days > 1:
-            dates_base_list = dates_base[(dates_base['dates'] > work_end_plan) & (dates_base['dates'] <= today)]
+        if (TODAY - work_end_plan).days > 1:
+            dates_base_list = dates_base[(dates_base['dates'] > work_end_plan) & (dates_base['dates'] <= TODAY)]
             df.loc[row_index, dates_base_list.index[1:]] = '>'
-            df.loc[row_index, dates_base_list.index[-1]+1] = (today - work_end_plan).days
+            df.loc[row_index, dates_base_list.index[-1]+1] = (TODAY - work_end_plan).days
 
 def setup_shipment(df, row_index, dates_base):
     order_plan_shipment_from = df.loc[row_index, 'order_plan_shipment_from']

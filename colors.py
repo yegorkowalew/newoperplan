@@ -6,7 +6,8 @@
 import pandas as pd
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
-import datetime
+# import datetime
+from settings import TODAY
 
 def readAppendData(a_file):
     try:
@@ -53,12 +54,10 @@ def colorsWrite(df):
     # for col_num, value `in enumerate(df.columns.values):
     #     worksheet.write(0, col_num + 1, value, header_format)
     
-    date = datetime.datetime.strptime('2020-02-14', "%Y-%m-%d")
-
     first_row = df.loc[:0].values.tolist()[0]
     for col_num, value in enumerate(first_row):
         try:
-            if date == value:
+            if TODAY.date() == value.date():
                 worksheet.write(1, col_num + 1, value, header_format_today)
                 twenty_days_ago_ind = (col_num + 1)-21
             else:
