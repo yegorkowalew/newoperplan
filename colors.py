@@ -141,6 +141,12 @@ def colorsWrite(df):
     # Высота строки 13
     for i in range(3, rows_count+1):
         worksheet.set_row(i, 13)
+
+    # Установка даты в ячейку
+    today_stamp = 'Отчет создан: %sг. в %s' % (TODAY.strftime('%d.%m.%Y'), TODAY.strftime('%H:%M:%S'))
+    today_stamp_format = workbook.add_format({'bold': True, 'italic': True})
+    worksheet.write('C3', today_stamp, today_stamp_format)
+
     worksheet.set_tab_color('#FF9900')  # Orange, цвет вкладки
 
     # Лист легенды
