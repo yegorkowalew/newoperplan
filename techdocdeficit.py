@@ -60,7 +60,7 @@ def create_dataframe(dflist):
     df = df.dropna(subset=['sn_no'])
     return df
 
-def worker_tech_doc(df):
+def worker_tech_doc(df, deficite_df):
     # Создаю столбцы с датами начала отсчета
     df['pickup_sn_date'] = df['sn_date']
     df['shipping_sn_date'] = df['sn_date']
@@ -76,6 +76,12 @@ def worker_tech_doc(df):
     df['shipping_comment'] = None
     df['design_comment'] = None
     df['pickup_issue'] = df['pickup_issue'].fillna(True).astype(bool)
+
+    # df['design_date'] = None
+
+    print(deficite_df)
+    df = pd.merge(df, deficite_df, on='order_no', how='outer')
+
     # Если не нужны, ставим в факт дату сз, в коммент пишем "Не нужны"
     def get_counterparty(sn_date, plan_date_f, date, days, comment, issue):
         # 'sn_date' # Начало отсчета
@@ -113,10 +119,64 @@ def worker_tech_doc(df):
 
         return sn_date, plan_date_f, date, days, comment
 
+    def get_design_counterparty(sn_date, plan_date_f, date, days, comment, document_count, without_date_count):
+        # 'sn_date' # Начало отсчета
+        # 'plan_date_f',# КВ Дата выдачи по плану
+        # 'date', # КВ Дата выдачи по факту
+        # 'days', # Дней
+        # 'comment' # Комментарий
+        # 'issue' # Нужна документация или нет
+        # if issue == False:
+        #     comment = 'Не нужны'
+        #     date = plan_date_f
+        
+        # days = (plan_date_f - date).days
+
+        # if days > 0:
+        #     comment = 'Раньше на %sдн.' % days
+
+        # if days < 0:
+        #     comment = 'Позже на %sдн.' % abs(days)
+
+        # if days == 0:
+        #     comment = 'В день по плану'
+
+        # if pd.isnull(date):
+        #     days = (plan_date_f - TODAY).days
+        #     if days > 0:
+        #         comment = 'До выдачи %sдн.' % days
+        #         days = '! %s' % (plan_date_f - TODAY).days
+        #     if days < 0:
+        #         comment = 'Просрочка %sдн.' % abs(days)
+        #         days = '! %s' % abs((plan_date_f - TODAY).days)
+        #     if days == 0:
+        #         comment = 'Выдача сегодня'
+        #         days = '! %s' % (plan_date_f - TODAY).days
+        if not pd.isnull(document_count):
+            if not pd.isnull(date):
+                days = (plan_date_f - date).days
+            comment = 'Не выданы: %s из %s' % (int(without_date_count), int(document_count))
+        return sn_date, plan_date_f, date, days, comment
+
 
     for index, row in df.iterrows():
         df.loc[index, 'pickup_sn_date'], df.loc[index, 'pickup_plan_date_f'], df.loc[index, 'pickup_date'], df.loc[index, 'pickup_days'], df.loc[index, 'pickup_comment'] = get_counterparty(row['pickup_sn_date'],row['pickup_plan_date_f'],row['pickup_date'],row['pickup_days'],row['pickup_comment'],row['pickup_issue'])
         df.loc[index, 'shipping_sn_date'], df.loc[index, 'shipping_plan_date_f'], df.loc[index, 'shipping_date'], df.loc[index, 'shipping_days'], df.loc[index, 'shipping_comment'] = get_counterparty(row['shipping_sn_date'],row['shipping_plan_date_f'],row['shipping_date'],row['shipping_days'],row['shipping_comment'],row['shipping_issue'])
+        df.loc[index, 'design_sn_date'], \
+        df.loc[index, 'design_plan_date_f'], \
+        df.loc[index, 'design_date'], \
+        df.loc[index, 'design_days'], \
+        df.loc[index, 'design_comment'] = get_design_counterparty(
+            row['design_sn_date'],
+            row['design_plan_date_f'],
+            row['design_date'],
+            row['design_days'],
+            row['design_comment'],
+            # row['shipping_issue']
+            row['document_count'],
+            row['without_date_count'],
+
+            )
 
     # Пересобираю df в правильном порядке столбцов
     df = df[[
@@ -149,6 +209,7 @@ def worker_tech_doc(df):
 
         'design_sn_date',
         'design_plan_date_f', # КД Дата выдачи по плану
+        'design_date', # ОС Дата выдачи по факту
         'design_days', # Разница в днях
         'design_comment', # Комментарий
     ]]
@@ -213,11 +274,11 @@ def techdocbase(in_folder):
 
     base_file.to_excel(TECH_DOC_BASE_FILE, index=False)
     df = df.rename({'Наименование': 'detail', 'Дата выдачи': 'design_date', 'order_no': 'order_no', 'dispatcher_design_date': 'dispatcher_design_date'}, axis='columns')
+    df['order_no'] = df['order_no'].astype(str)
     return df
 
 def techdocdeficite(df):
-    # filtered_df = df[df['design_date'].notnull()] # есть даты
-    df = df[df['design_date'].isnull()] # есть даты
+    df = df[df['design_date'].isnull()] 
     df = df.rename({'detail': 'Наименование', 'design_date': 'Дата выдачи', 'order_no': 'Заказ №', 'dispatcher_design_date': 'Диспетчер'}, axis='columns')
     df = df[[
         'Диспетчер',
@@ -228,13 +289,17 @@ def techdocdeficite(df):
     df.to_excel(os.path.join(TECH_DOC_DAILY_REPORT_FOLDER, filename), index=False)
 
 def techdocreport(df):
-    # titanic.groupby('sex')[['survived']].mean()
-    # 'detail', 'design_date', 'order_no', 'dispatcher_design_date'
-    # df = df.pivot_table('design_date', index='order_no', columns='design_date', aggfunc='max')
-    
-    # df = df.pivot_table(index='order_no', columns='design_date', aggfunc='max', fill_value=0)
-    df.to_excel('testfiles\\test.xlsx')
-    print(df)
+    import numpy as np
+    df =df.drop('detail', axis=1)
+    df['dispatcher_design_date'] = df['dispatcher_design_date'] + '||'
+    df['document_count'] = 1
+    df['without_date_count'] = df['design_date'].apply(lambda x: 1 if pd.isnull(x) else 0 )
+    dates = df.groupby('order_no').agg({'design_date': [np.max], 'dispatcher_design_date': [np.sum], 'document_count': [np.sum], 'without_date_count': [np.sum]})
+    dates = dates.reset_index(level='order_no', col_level=1, col_fill='order_no')
+    dates.columns = [col[0] for col in dates.columns]
+    dates['dispatcher_design_date'] = dates['dispatcher_design_date'].apply(lambda x: x.split('||')[0])
+    df['order_no'] = df['order_no'].astype(str)
+    return dates
 
 
 if __name__ == "__main__":
@@ -253,25 +318,28 @@ if __name__ == "__main__":
     
     t = timing() #[  76.51с.]       Конец выполнения
     
-    # from multiprocessing import Pool
-    # from multiprocessing.dummy import Pool as ThreadPool
-    # pool = ThreadPool()
+    from multiprocessing import Pool
+    from multiprocessing.dummy import Pool as ThreadPool
+    pool = ThreadPool()
 
-    # results = []
-    # result_objects = [
-    #     pool.apply_async(readyReadFile, (READY_FILE,)),
-    #     pool.apply_async(serviceNoteReadFile, (SN_FILE,)),
-    #     pool.apply_async(productionPlanReadFile, (PRODUCTION_PLAN_FILE,)),
-    #     pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
-    #     ]
+    results = []
+    result_objects = [
+        pool.apply_async(readyReadFile, (READY_FILE,)),
+        pool.apply_async(serviceNoteReadFile, (SN_FILE,)),
+        pool.apply_async(productionPlanReadFile, (PRODUCTION_PLAN_FILE,)),
+        pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
+        ]
     
-    # df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
-    # df = worker_tech_doc(df)
-
-    # df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
-    # techdocFindFile(TECH_DOC_DEFICIT_FOLDER)
+    all_df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
     df = techdocbase(TECH_DOC_DEFICIT_FOLDER)
-    techdocdeficite(df)
-    techdocreport(df)
+    deficite = techdocreport(df)
 
+    all_df = worker_tech_doc(all_df, deficite)
+    all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
+
+    # techdocdeficite(df)
+    
+    # df_merge_col = pd.merge(all_df, deficite, on='order_no', how='outer')
+    
+    # df_merge_col.to_excel('testfiles\\test3.xlsx')
     t("{:>5} Конец выполнения".format(''))
