@@ -2,6 +2,7 @@
 import pandas as pd
 # import datetime
 # from datetime import datetime
+from settings import TODAY
 
 def create_dataframe(dflist):
     df = pd.concat(dflist, axis=1, sort=False)
@@ -54,6 +55,8 @@ def create_dataframe(dflist):
         'dispatcher_shipping_issue', # Диспетчер отметивший нужна документация или нет
         # ОС Разница дней
         # ОС Комментарий
+
+        'design_plan_date_f',# КД Дата выдачи по плану
     ]].copy()
     df = df.dropna(subset=['sn_no'])
     return df
@@ -75,31 +78,46 @@ def worker_tech_doc(df):
     df['design_comment'] = None
     df['pickup_issue'] = df['pickup_issue'].fillna(True).astype(bool)
     # Если не нужны, ставим в факт дату сз, в коммент пишем "Не нужны"
-    def get_counterparty(pickup_sn_date, pickup_plan_date_f, pickup_date, pickup_days, pickup_comment, pickup_issue):
-        # 'pickup_sn_date' # Начало отсчета
-        # 'pickup_plan_date_f',# КВ Дата выдачи по плану
-        # 'pickup_date', # КВ Дата выдачи по факту
-        # 'pickup_days', # Дней
-        # 'pickup_comment' # Комментарий
-        # 'pickup_issue' # Нужна документация или нет
-        # if not pd.isnull(row['counterparty']):
-        #     return 'Заказчик: %s' % (row['counterparty'])
-        # else:
-        #     return 'Заказчик: Не указан'
-        if pickup_issue == False:
-            pickup_comment = 'Не нужны'
-            pickup_date = pickup_sn_date
-            pickup_days = pickup_sn_date - pickup_sn_date 
-        # pickup_days = pickup_plan_date_f - pickup_sn_date
-        return pickup_sn_date, pickup_plan_date_f, pickup_date, pickup_days, pickup_comment
-        # return 1, 2, 3, 4, 5
+    def get_counterparty(sn_date, plan_date_f, date, days, comment, issue):
+        # 'sn_date' # Начало отсчета
+        # 'plan_date_f',# КВ Дата выдачи по плану
+        # 'date', # КВ Дата выдачи по факту
+        # 'days', # Дней
+        # 'comment' # Комментарий
+        # 'issue' # Нужна документация или нет
+        if issue == False:
+            comment = 'Не нужны'
+            date = plan_date_f
+        
+        days = (plan_date_f - date).days
+
+        if days > 0:
+            comment = 'Раньше на %sдн.' % days
+
+        if days < 0:
+            comment = 'Позже на %sдн.' % abs(days)
+
+        if days == 0:
+            comment = 'В день по плану'
+
+        if pd.isnull(date):
+            days = (plan_date_f - TODAY).days
+            if days > 0:
+                comment = 'До выдачи %sдн.' % days
+                days = '! %s' % (plan_date_f - TODAY).days
+            if days < 0:
+                comment = 'Просрочка %sдн.' % abs(days)
+                days = '! %s' % abs((plan_date_f - TODAY).days)
+            if days == 0:
+                comment = 'Выдача сегодня'
+                days = '! %s' % (plan_date_f - TODAY).days
+
+        return sn_date, plan_date_f, date, days, comment
 
 
     for index, row in df.iterrows():
-        # if index == 1285:
-        # row['pickup_sn_date'],row['pickup_plan_date_f'],row['pickup_date'],row['pickup_days'],row['pickup_comment'] = get_counterparty(row['pickup_sn_date'],row['pickup_plan_date_f'],row['pickup_date'],row['pickup_days'],row['pickup_comment'],row['pickup_issue'])
-            # print(row)
         df.loc[index, 'pickup_sn_date'], df.loc[index, 'pickup_plan_date_f'], df.loc[index, 'pickup_date'], df.loc[index, 'pickup_days'], df.loc[index, 'pickup_comment'] = get_counterparty(row['pickup_sn_date'],row['pickup_plan_date_f'],row['pickup_date'],row['pickup_days'],row['pickup_comment'],row['pickup_issue'])
+        df.loc[index, 'shipping_sn_date'], df.loc[index, 'shipping_plan_date_f'], df.loc[index, 'shipping_date'], df.loc[index, 'shipping_days'], df.loc[index, 'shipping_comment'] = get_counterparty(row['shipping_sn_date'],row['shipping_plan_date_f'],row['shipping_date'],row['shipping_days'],row['shipping_comment'],row['shipping_issue'])
 
     # Пересобираю df в правильном порядке столбцов
     df = df[[
@@ -131,6 +149,7 @@ def worker_tech_doc(df):
         # 'dispatcher_shipping_issue', # Диспетчер отметивший нужна документация или нет
 
         'design_sn_date',
+        'design_plan_date_f', # КД Дата выдачи по плану
         'design_days', # Разница в днях
         'design_comment', # Комментарий
     ]]
@@ -167,5 +186,6 @@ if __name__ == "__main__":
     
     df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
     df = worker_tech_doc(df)
+    # print(df['pickup_date'].head(20))
     df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
     t("{:>5} Конец выполнения".format(''))

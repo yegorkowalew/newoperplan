@@ -84,8 +84,24 @@ def serviceNoteReadFile(sn_file):
             if not pd.isnull(row['sn_date']):
                 return row['sn_date']
 
+        def setup_design_plan_date(row):
+            if not pd.isnull(row['design_plan_date']):
+                return row['design_plan_date']
+
+            if not pd.isnull(row['design_plan_days']):
+                if not pd.isnull(row['sn_date']):
+                    return row['sn_date'] + pd.DateOffset(row['design_plan_days'])
+
+            if not pd.isnull(row['pickup_plan_date_f']):
+                # Если даты по плану нет и если нету дней по плану - берем дату по плану выдачи комплектовочных
+                return row['pickup_plan_date_f']
+
+            if not pd.isnull(row['sn_date']):
+                return row['sn_date']
+
         df['pickup_plan_date_f'] = df.apply (lambda row: setup_pickup_plan_date(row), axis=1)
         df['shipping_plan_date_f'] = df.apply (lambda row: setup_shipping_plan_date(row), axis=1)
+        df['design_plan_date_f'] = df.apply (lambda row: setup_design_plan_date(row), axis=1)
         df = df[[
             'shipment_from',
             'shipment_before',
@@ -106,6 +122,7 @@ def serviceNoteReadFile(sn_file):
             'material_plan_date',
             'pickup_plan_date_f',
             'shipping_plan_date_f',
+            'design_plan_date_f'
             ]]
         return df
 
