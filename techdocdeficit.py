@@ -227,6 +227,15 @@ def techdocdeficite(df):
     filename = '%s - дефицит КД.xlsx' % TODAY.strftime('%Y.%m.%d %H-%M')
     df.to_excel(os.path.join(TECH_DOC_DAILY_REPORT_FOLDER, filename), index=False)
 
+def techdocreport(df):
+    # titanic.groupby('sex')[['survived']].mean()
+    # 'detail', 'design_date', 'order_no', 'dispatcher_design_date'
+    # df = df.pivot_table('design_date', index='order_no', columns='design_date', aggfunc='max')
+    
+    # df = df.pivot_table(index='order_no', columns='design_date', aggfunc='max', fill_value=0)
+    df.to_excel('testfiles\\test.xlsx')
+    print(df)
+
 
 if __name__ == "__main__":
     from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, PRODUCTION_PLAN_FILE, SHEDULE_FOLDER
@@ -263,5 +272,6 @@ if __name__ == "__main__":
     # techdocFindFile(TECH_DOC_DEFICIT_FOLDER)
     df = techdocbase(TECH_DOC_DEFICIT_FOLDER)
     techdocdeficite(df)
+    techdocreport(df)
 
     t("{:>5} Конец выполнения".format(''))
