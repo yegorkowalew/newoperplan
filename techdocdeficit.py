@@ -1,8 +1,7 @@
-# import itertools
 import pandas as pd
-# import datetime
-# from datetime import datetime
-from settings import TODAY
+import os
+from settings import TODAY, TECH_DOC_BASE_FILE, TECH_DOC_DEFICIT_FOLDER, TECH_DOC_DAILY_REPORT_FOLDER
+from openpyxl import load_workbook
 
 def create_dataframe(dflist):
     df = pd.concat(dflist, axis=1, sort=False)
@@ -156,6 +155,79 @@ def worker_tech_doc(df):
 
     return df
 
+def techdocFindFile(in_folder):
+    tree = os.walk(in_folder)
+    files_list = []
+    for address, dirs, files in tree:
+        for fl in files:
+            if not '~$' in fl.split('.')[0] and fl.split('.')[-1] == 'xlsx':
+                files_list.append(os.path.join(address, fl))
+    return files_list
+
+def reportReadFile(path_file):
+    try:
+        df = pd.read_excel(
+            path_file,
+            sheet_name="Дефицит",
+            header=3,
+            usecols = [
+                'Наименование',
+                'Дата выдачи',
+            ],
+
+            parse_dates = [
+                'Дата выдачи',
+            ],
+        )
+    except Exception as ind:
+        # logger.error("inDocumentReadFile error with file: %s - %s" % (file_name, ind))
+        print("inDocumentReadFile error with file: %s - %s" % (path_file, ind))
+    else:
+        return df
+
+def get_dispatcher_from_path(file_path):
+    # Есть высокая вероятность того что с именем оператора можем не угадать
+    return file_path.split('\\')[-2]
+
+def techdocbase(in_folder):
+    files_list = techdocFindFile(in_folder)
+    df_arr = []
+    for report in files_list:
+        dispatcher_design_date = get_dispatcher_from_path(report)
+        wb = load_workbook(filename=report, read_only=True)
+        ws = wb['Дефицит']
+        order_no = ws.cell(row=2, column=2).value
+        df = reportReadFile(report)
+        df['order_no'] = order_no
+        df['dispatcher_design_date'] = dispatcher_design_date
+        df_arr.append(df)
+    df = pd.concat(df_arr, ignore_index=True, sort=False)
+
+    base_file = df.rename({'Наименование': 'Наименование', 'Дата выдачи': 'Дата выдачи', 'order_no': 'Заказ №', 'dispatcher_design_date': 'Диспетчер'}, axis='columns')
+    base_file = base_file[[
+        'Диспетчер',
+        'Заказ №',
+        'Наименование',
+        'Дата выдачи'
+    ]]
+
+    base_file.to_excel(TECH_DOC_BASE_FILE, index=False)
+    df = df.rename({'Наименование': 'detail', 'Дата выдачи': 'design_date', 'order_no': 'order_no', 'dispatcher_design_date': 'dispatcher_design_date'}, axis='columns')
+    return df
+
+def techdocdeficite(df):
+    # filtered_df = df[df['design_date'].notnull()] # есть даты
+    df = df[df['design_date'].isnull()] # есть даты
+    df = df.rename({'detail': 'Наименование', 'design_date': 'Дата выдачи', 'order_no': 'Заказ №', 'dispatcher_design_date': 'Диспетчер'}, axis='columns')
+    df = df[[
+        'Диспетчер',
+        'Заказ №',
+        'Наименование',
+    ]]
+    filename = '%s - дефицит КД.xlsx' % TODAY.strftime('%Y.%m.%d %H-%M')
+    df.to_excel(os.path.join(TECH_DOC_DAILY_REPORT_FOLDER, filename), index=False)
+
+
 if __name__ == "__main__":
     from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, PRODUCTION_PLAN_FILE, SHEDULE_FOLDER
     from readready import readyReadFile
@@ -172,20 +244,24 @@ if __name__ == "__main__":
     
     t = timing() #[  76.51с.]       Конец выполнения
     
-    from multiprocessing import Pool
-    from multiprocessing.dummy import Pool as ThreadPool
-    pool = ThreadPool()
+    # from multiprocessing import Pool
+    # from multiprocessing.dummy import Pool as ThreadPool
+    # pool = ThreadPool()
 
-    results = []
-    result_objects = [
-        pool.apply_async(readyReadFile, (READY_FILE,)),
-        pool.apply_async(serviceNoteReadFile, (SN_FILE,)),
-        pool.apply_async(productionPlanReadFile, (PRODUCTION_PLAN_FILE,)),
-        pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
-        ]
+    # results = []
+    # result_objects = [
+    #     pool.apply_async(readyReadFile, (READY_FILE,)),
+    #     pool.apply_async(serviceNoteReadFile, (SN_FILE,)),
+    #     pool.apply_async(productionPlanReadFile, (PRODUCTION_PLAN_FILE,)),
+    #     pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
+    #     ]
     
-    df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
-    df = worker_tech_doc(df)
-    # print(df['pickup_date'].head(20))
-    df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
+    # df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
+    # df = worker_tech_doc(df)
+
+    # df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
+    # techdocFindFile(TECH_DOC_DEFICIT_FOLDER)
+    df = techdocbase(TECH_DOC_DEFICIT_FOLDER)
+    techdocdeficite(df)
+
     t("{:>5} Конец выполнения".format(''))
