@@ -287,6 +287,13 @@ def techdocreport(df):
     df['order_no'] = df['order_no'].astype(str)
     return dates
 
+def techDocWorker(all_df):
+    df = techdocbase(TECH_DOC_DEFICIT_FOLDER) #создаем базу дефицитов
+    techdocdeficite(df) # Дефициты в файл
+    deficite = techdocreport(df) # Дефициты в df
+    all_df = worker_tech_doc(all_df, deficite) # Объединить остальную документацию и дефициты чертежей
+    # all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
+    return all_df
 
 if __name__ == "__main__":
     from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, PRODUCTION_PLAN_FILE, SHEDULE_FOLDER
@@ -317,15 +324,13 @@ if __name__ == "__main__":
         ]
     
     all_df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
-    df = techdocbase(TECH_DOC_DEFICIT_FOLDER)
-    deficite = techdocreport(df)
+    # df = techdocbase(TECH_DOC_DEFICIT_FOLDER)
+    # deficite = techdocreport(df)
+    # all_df = worker_tech_doc(all_df, deficite)
+    # all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
+    # techdocdeficite(df)
 
-    all_df = worker_tech_doc(all_df, deficite)
-    all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
-
-    techdocdeficite(df)
+    result = techDocWorker(all_df)
+    result.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
     
-    # df_merge_col = pd.merge(all_df, deficite, on='order_no', how='outer')
-    
-    # df_merge_col.to_excel('testfiles\\test3.xlsx')
     t("{:>5} Конец выполнения".format(''))
