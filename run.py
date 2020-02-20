@@ -11,6 +11,7 @@ from readshedule import sheduleWorker
 from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, PRODUCTION_PLAN_FILE, SHEDULE_FOLDER
 from writeplan import writeWorker
 from appenddata import appendDataWorker
+from colors import colorsWrite
 import time
 
 if __name__ == "__main__":
@@ -22,30 +23,33 @@ if __name__ == "__main__":
     t = timing()
 
     readyDf = readyReadFile(READY_FILE)
-    readyDf.to_excel('testfiles\\Ready.xlsx')
+    # readyDf.to_excel('testfiles\\Ready.xlsx')
     t("{:>5} Готовые".format(len(readyDf)))
 
     serviceNoteDf = serviceNoteReadFile(SN_FILE)
-    serviceNoteDf.to_excel('testfiles\\Service_Notes.xlsx')
+    # serviceNoteDf.to_excel('testfiles\\Service_Notes.xlsx')
     t("{:>5} Служебные записки".format(len(serviceNoteDf)))
 
     inDocumentDf = worker(IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER)
-    inDocumentDf.to_excel('testfiles\\In_Documents.xlsx')
+    # inDocumentDf.to_excel('testfiles\\In_Documents.xlsx')
     t("{:>5} Документация".format(len(inDocumentDf)))
 
     productionPlanDf = productionPlanReadFile(PRODUCTION_PLAN_FILE)
-    productionPlanDf.to_excel('testfiles\\Production_Plan.xlsx')
+    # productionPlanDf.to_excel('testfiles\\Production_Plan.xlsx')
     t("{:>5} План производства".format(len(productionPlanDf)))
 
     correct_files, error_files = sheduleWorker(SHEDULE_FOLDER)
-    correct_files.to_excel('testfiles\\Correct_Shedule_Files.xlsx')
-    error_files.to_excel('testfiles\\Failure_Shedule_Files.xlsx')
+    # correct_files.to_excel('testfiles\\Correct_Shedule_Files.xlsx')
+    # error_files.to_excel('testfiles\\Failure_Shedule_Files.xlsx')
     t("{:>5} Обработка графиков".format(''))
 
     df = writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
-    df.to_excel('testfiles\\Plan.xlsx')
+    # df.to_excel('testfiles\\Plan.xlsx')
     t("{:>5} Создал план".format(''))
 
     df = appendDataWorker(df)
-    df.to_excel('testfiles\\AppendData.xlsx')
+    # df.to_excel('testfiles\\AppendData.xlsx')
+    t("{:>5} План производства, не раскрашеный".format(''))
+    colorsWrite(df)
+    t("{:>5} Файл плана производства".format(''))
     t("{:>5} Конец выполнения".format(''))
