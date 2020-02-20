@@ -120,40 +120,7 @@ def worker_tech_doc(df, deficite_df):
         return sn_date, plan_date_f, date, days, comment
 
     def get_design_counterparty(sn_date, plan_date_f, date, days, comment, document_count, without_date_count):
-        # 'sn_date' # Начало отсчета
-        # 'plan_date_f',# КВ Дата выдачи по плану
-        # 'date', # КВ Дата выдачи по факту
-        # 'days', # Дней
-        # 'comment' # Комментарий
-        # 'issue' # Нужна документация или нет
-        # if issue == False:
-        #     comment = 'Не нужны'
-        #     date = plan_date_f
-        
-        # days = (plan_date_f - date).days
-
-        # if days > 0:
-        #     comment = 'Раньше на %sдн.' % days
-
-        # if days < 0:
-        #     comment = 'Позже на %sдн.' % abs(days)
-
-        # if days == 0:
-        #     comment = 'В день по плану'
-
-        # if pd.isnull(date):
-        #     days = (plan_date_f - TODAY).days
-        #     if days > 0:
-        #         comment = 'До выдачи %sдн.' % days
-        #         days = '! %s' % (plan_date_f - TODAY).days
-        #     if days < 0:
-        #         comment = 'Просрочка %sдн.' % abs(days)
-        #         days = '! %s' % abs((plan_date_f - TODAY).days)
-        #     if days == 0:
-        #         comment = 'Выдача сегодня'
-        #         days = '! %s' % (plan_date_f - TODAY).days
         if not pd.isnull(document_count):
-            # if without_date_count == document_count:
             if document_count > 0:
             # Не выданы все по заказу, соответственно дата по факту не стоит
             # Нужно поставить сегодняшнюю дату и разницу в днях
@@ -176,15 +143,6 @@ def worker_tech_doc(df, deficite_df):
                 if days == 0:
                     comment = 'В день по плану.' % abs(days)
 
-            # if without_date_count < document_count:
-            #     # Если выдано меньше чем всего
-            #     comment = 'Не выданы: %s из %s' % (int(without_date_count), int(document_count))
-            #     days = (plan_date_f - date).days
-            #     days = '! %s' % (plan_date_f - TODAY).days
-
-            # if not pd.isnull(date):
-            #     days = (plan_date_f - date).days
-            # comment = 'Не выданы: %s из %s' % (int(without_date_count), int(document_count))
         return sn_date, plan_date_f, date, days, comment
 
 
@@ -201,7 +159,6 @@ def worker_tech_doc(df, deficite_df):
             row['design_date'],
             row['design_days'],
             row['design_comment'],
-            # row['shipping_issue']
             row['document_count'],
             row['without_date_count'],
 
