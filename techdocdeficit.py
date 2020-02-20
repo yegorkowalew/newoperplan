@@ -153,9 +153,38 @@ def worker_tech_doc(df, deficite_df):
         #         comment = 'Выдача сегодня'
         #         days = '! %s' % (plan_date_f - TODAY).days
         if not pd.isnull(document_count):
-            if not pd.isnull(date):
+            # if without_date_count == document_count:
+            if document_count > 0:
+            # Не выданы все по заказу, соответственно дата по факту не стоит
+            # Нужно поставить сегодняшнюю дату и разницу в днях
+                date = TODAY
+                days = (plan_date_f - TODAY).days
+                if days > 0:
+                    comment = 'До выдачи %sдн.' % abs(days)
+                if days < 0:
+                    comment = 'Просрочка %sдн.' % abs(days)
+                    days = '! %s' % days
+                if days == 0:
+                    comment = 'Выдача сегодня.' % abs(days)
+            
+            if without_date_count == 0:
                 days = (plan_date_f - date).days
-            comment = 'Не выданы: %s из %s' % (int(without_date_count), int(document_count))
+                if days > 0:
+                    comment = 'Раньше на %sдн.' % abs(days)
+                if days < 0:
+                    comment = 'Позже на %sдн.' % abs(days)
+                if days == 0:
+                    comment = 'В день по плану.' % abs(days)
+
+            # if without_date_count < document_count:
+            #     # Если выдано меньше чем всего
+            #     comment = 'Не выданы: %s из %s' % (int(without_date_count), int(document_count))
+            #     days = (plan_date_f - date).days
+            #     days = '! %s' % (plan_date_f - TODAY).days
+
+            # if not pd.isnull(date):
+            #     days = (plan_date_f - date).days
+            # comment = 'Не выданы: %s из %s' % (int(without_date_count), int(document_count))
         return sn_date, plan_date_f, date, days, comment
 
 
@@ -337,7 +366,7 @@ if __name__ == "__main__":
     all_df = worker_tech_doc(all_df, deficite)
     all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
 
-    # techdocdeficite(df)
+    techdocdeficite(df)
     
     # df_merge_col = pd.merge(all_df, deficite, on='order_no', how='outer')
     
