@@ -3,24 +3,26 @@ import os
 # TODAY = datetime.strptime('2020-02-14', "%Y-%m-%d")
 TODAY = datetime.now()
 
+BASE_PATH = 'C:\\work\\newoperplan\\testfiles' 
+
 ## Файл служебных записок
-SN_FILE = 'C:\\work\\newoperplan\\testfiles\\Служебные записки.xlsx'
+SN_FILE = os.path.join(BASE_PATH, 'Служебные записки.xlsx')
 
 ## Файл с готовыми заказами
-READY_FILE = 'C:\\work\\newoperplan\\testfiles\\Готовые заказы.xlsx'
+READY_FILE = os.path.join(BASE_PATH, 'Готовые заказы.xlsx')
 
 ## Папка в которой диспетчера отмечают входящую документацию и имя файла который нужно парсить
-IN_DOCUMENT_FOLDER = 'C:\\work\\newoperplan\\testfiles\\График документации'
+IN_DOCUMENT_FOLDER = os.path.join(BASE_PATH, 'График документации')
 IN_DOCUMENT_FILE = 'График документации v1.xlsx'
 
 ## План производства
-PRODUCTION_PLAN_FILE = 'C:\\work\\newoperplan\\testfiles\\План производства.xlsx' # Файл плана производства
+PRODUCTION_PLAN_FILE = os.path.join(BASE_PATH, 'План производства.xlsx') # Файл плана производства
 
 ## Папка графиков ПДО
-SHEDULE_FOLDER = 'C:\\work\\newoperplan\\testfiles\\Графики ПДО'
+SHEDULE_FOLDER = os.path.join(BASE_PATH, 'Графики ПДО')
 
 ## Папка "Учет конструкторской документации"
-TECH_DOC_FOLDER = 'C:\\work\\newoperplan\\testfiles\\Учет конструкторской документации'
+TECH_DOC_FOLDER = os.path.join(BASE_PATH, 'Учет конструкторской документации')
 
 ## Папка "Учет конструкторской документации" - База дефицитов
 TECH_DOC_BASE_FILE = os.path.join(TECH_DOC_FOLDER, 'База дефицитов', 'База.xlsx')
