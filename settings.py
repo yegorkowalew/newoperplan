@@ -4,6 +4,7 @@ import os
 TODAY = datetime.now()
 
 BASE_PATH = 'C:\\work\\newoperplan\\testfiles' 
+# BASE_PATH = '\\\\srv-file\\FileServer\\ПДО_Производство' 
 
 ## Файл служебных записок
 SN_FILE = os.path.join(BASE_PATH, 'Служебные записки.xlsx')
@@ -16,7 +17,7 @@ IN_DOCUMENT_FOLDER = os.path.join(BASE_PATH, 'График документац�
 IN_DOCUMENT_FILE = 'График документации v1.xlsx'
 
 ## План производства
-PRODUCTION_PLAN_FILE = os.path.join(BASE_PATH, 'План производства.xlsx') # Файл плана производства
+PRODUCTION_PLAN_FILE = os.path.join(BASE_PATH, 'График план производства\\План производства.xlsx') # Файл плана производства
 
 ## Папка графиков ПДО
 SHEDULE_FOLDER = os.path.join(BASE_PATH, 'Графики ПДО')

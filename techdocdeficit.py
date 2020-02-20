@@ -79,7 +79,7 @@ def worker_tech_doc(df, deficite_df):
 
     # df['design_date'] = None
 
-    print(deficite_df)
+    # print(deficite_df)
     df = pd.merge(df, deficite_df, on='order_no', how='outer')
 
     # Если не нужны, ставим в факт дату сз, в коммент пишем "Не нужны"
@@ -288,6 +288,7 @@ def techdocreport(df):
     return dates
 
 def techDocWorker(all_df):
+    all_df = create_dataframe(all_df)
     df = techdocbase(TECH_DOC_DEFICIT_FOLDER) #создаем базу дефицитов
     techdocdeficite(df) # Дефициты в файл
     deficite = techdocreport(df) # Дефициты в df
@@ -323,14 +324,14 @@ if __name__ == "__main__":
         pool.apply_async(worker, (IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER,)),
         ]
     
-    all_df = create_dataframe([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
+    # all_df = create_dataframe()
     # df = techdocbase(TECH_DOC_DEFICIT_FOLDER)
     # deficite = techdocreport(df)
     # all_df = worker_tech_doc(all_df, deficite)
     # all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
     # techdocdeficite(df)
 
-    result = techDocWorker(all_df)
-    result.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
+    result = techDocWorker([result_objects[0].get(), result_objects[1].get(), result_objects[2].get(), result_objects[3].get()])
+    result.to_excel('testfiles\\Documentation_Deficit.xlsx')
     
     t("{:>5} Конец выполнения".format(''))

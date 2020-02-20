@@ -12,6 +12,7 @@ from settings import READY_FILE, SN_FILE, IN_DOCUMENT_FILE, IN_DOCUMENT_FOLDER, 
 from writeplan import writeWorker
 from appenddata import appendDataWorker
 from colors import colorsWrite
+from techdocdeficit import techDocWorker
 import time
 
 if __name__ == "__main__":
@@ -43,13 +44,20 @@ if __name__ == "__main__":
     # error_files.to_excel('testfiles\\Failure_Shedule_Files.xlsx')
     t("{:>5} Обработка графиков".format(''))
 
-    df = writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
+    all_df = writeWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
     # df.to_excel('testfiles\\Plan.xlsx')
+
     t("{:>5} Создал план".format(''))
 
-    df = appendDataWorker(df)
-    # df.to_excel('testfiles\\AppendData.xlsx')
+    df = appendDataWorker(all_df)
+    df.to_excel('testfiles\\AppendData.xlsx')
     t("{:>5} План производства, не раскрашеный".format(''))
+    
     colorsWrite(df)
-    t("{:>5} Файл плана производства".format(''))
+    t("{:>5} План производства, раскрашеный".format(''))
+
+    result = techDocWorker([readyDf, serviceNoteDf, productionPlanDf, inDocumentDf])
+    result.to_excel('testfiles\\Documentation_Deficit.xlsx')
+    t("{:>5} Файл отчета по документации".format(''))
+
     t("{:>5} Конец выполнения".format(''))
