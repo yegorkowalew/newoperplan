@@ -50,10 +50,11 @@ def techColorsWrite(df):
         # datetime_format='dd.mm.yyyy',
         # date_format='dd.mm.yyyy'
         )
+    date_sheet_name = 'Документация за %s' % TODAY.strftime('%d.%m.%Y')
 
-    df.to_excel(writer, sheet_name='Документы')
+    df.to_excel(writer, sheet_name=date_sheet_name)
     workbook  = writer.book
-    worksheet = writer.sheets['Документы']
+    worksheet = writer.sheets[date_sheet_name]
 
     header_format = workbook.add_format({'font_size': 10,'valign':'vcenter','bold':True,'align':'center','text_wrap':True,'color': 'white','bg_color':'#f05623','bottom':1, 'bottom_color':'#f05623'
         })

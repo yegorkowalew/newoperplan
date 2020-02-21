@@ -5,9 +5,7 @@ from openpyxl import load_workbook
 
 def create_dataframe(dflist):
     df = pd.concat(dflist, axis=1, sort=False)
-    df.to_excel('testfiles\\1.xlsx')
     df = df.loc[(df['ready_status'] == False) & (df['produced'] == True)]
-    df.to_excel('testfiles\\2.xlsx')
         # №№СЗ
         # № Заказа
         # Контрагент
