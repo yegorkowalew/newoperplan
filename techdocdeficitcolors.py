@@ -22,7 +22,7 @@ def readAppendData(a_file):
     else:
         return df
 
-def colorsWrite(df):
+def techColorsWrite(df):
     #### Индексы
     def convert(x) -> (str, None):
         try:
@@ -101,13 +101,13 @@ def colorsWrite(df):
         except:
             pass
 
-    rows_count = len(df.count(axis='columns'))
+    rows_count = len(df.count(axis='columns'))+1
 
     worksheet.set_row(0, 50, None)
 
     worksheet.set_column(0,0, 0) # Первые два столбца индекс и ин_айди
 
-    worksheet.set_column(1,1, 4, header_col) # '№№ СЗ',
+    worksheet.set_column(1,1, 7, header_col) # '№№ СЗ',
     worksheet.set_column(2,2, 10, header_col) # '№ Заказа',
     worksheet.set_column(3,3, 30, header_col) # 'Контрагент',
     worksheet.set_column(4,4, 70, header_col) # 'Продукция',
@@ -133,11 +133,22 @@ def colorsWrite(df):
     bad = workbook.add_format({'bg_color':'#ff8596'})
     good = workbook.add_format({'bg_color':'#ebf1de'})
     alert = workbook.add_format({'bg_color':'#fcd5b4'})
-    select = 'F1:J%s' % rows_count
-    worksheet.conditional_format(select, {'type':'formula', 'criteria': '=$I1<0', 'format': bad})
+    
+    select_KV = 'F1:J%s' % rows_count
+    select_OS = 'K1:O%s' % rows_count
+    select_KD = 'P1:T%s' % rows_count
 
-    # worksheet.conditional_format(select, {'type':'formula', 'criteria': '=$I1>0', 'format': good})
-    # worksheet.conditional_format(select, {'type':'formula', 'criteria': '=AND(ISNUMBER($I1); $I1>=0)', 'format': good})
+    worksheet.conditional_format(select_KV, {'type':'formula', 'criteria': '=$I1<0', 'format': alert})
+    worksheet.conditional_format(select_KV, {'type':'formula','criteria':'=AND(ISNUMBER($I1), $I1>=0)','format':good,})
+    worksheet.conditional_format(select_KV,{'type':'formula','criteria':'=ISNUMBER(SEARCH("!", $I1))','format':  bad,})
+
+    worksheet.conditional_format(select_OS, {'type':'formula', 'criteria': '=$N1<0', 'format': alert})
+    worksheet.conditional_format(select_OS, {'type':'formula','criteria':'=AND(ISNUMBER($N1), $N1>=0)','format':good,})
+    worksheet.conditional_format(select_OS,{'type':'formula','criteria':'=ISNUMBER(SEARCH("!", $N1))','format':  bad,})
+
+    worksheet.conditional_format(select_KD, {'type':'formula', 'criteria': '=$S1<0', 'format': alert})
+    worksheet.conditional_format(select_KD, {'type':'formula','criteria':'=AND(ISNUMBER($S1), $S1>=0)','format':good,})
+    worksheet.conditional_format(select_KD,{'type':'formula','criteria':'=ISNUMBER(SEARCH("!", $S1))','format':  bad,})
 
     worksheet.freeze_panes(1, 5)
 
@@ -152,6 +163,6 @@ if __name__ == "__main__":
         return lambda x: print("[{:>7.2f}с.] {}".format(time.time() - start_time, x))
     t = timing()
     df = readAppendData('testfiles\\Documentation_Deficit.xlsx')
-    print(df.head(5))
-    colorsWrite(df)
+    # print(df.head(5))
+    techColorsWrite(df)
     t("{:>5} Конец выполнения".format(''))

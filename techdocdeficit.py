@@ -5,7 +5,9 @@ from openpyxl import load_workbook
 
 def create_dataframe(dflist):
     df = pd.concat(dflist, axis=1, sort=False)
+    df.to_excel('testfiles\\1.xlsx')
     df = df.loc[(df['ready_status'] == False) & (df['produced'] == True)]
+    df.to_excel('testfiles\\2.xlsx')
         # №№СЗ
         # № Заказа
         # Контрагент
@@ -80,6 +82,7 @@ def worker_tech_doc(df, deficite_df):
     # df['design_date'] = None
 
     # print(deficite_df)
+
     df = pd.merge(df, deficite_df, on='order_no', how='outer')
 
     # Если не нужны, ставим в факт дату сз, в коммент пишем "Не нужны"
@@ -215,7 +218,7 @@ def reportReadFile(path_file):
     try:
         df = pd.read_excel(
             path_file,
-            sheet_name="Дефицит",
+            sheet_name="Лист1",
             header=3,
             usecols = [
                 'Наименование',
@@ -228,7 +231,7 @@ def reportReadFile(path_file):
         )
     except Exception as ind:
         # logger.error("inDocumentReadFile error with file: %s - %s" % (file_name, ind))
-        print("inDocumentReadFile error with file: %s - %s" % (path_file, ind))
+        print("reportReadFile error with file: %s - %s" % (path_file, ind))
     else:
         return df
 
@@ -242,9 +245,13 @@ def techdocbase(in_folder):
     for report in files_list:
         dispatcher_design_date = get_dispatcher_from_path(report)
         wb = load_workbook(filename=report, read_only=True)
-        ws = wb['Дефицит']
+        ws = wb['Лист1']
         order_no = ws.cell(row=2, column=2).value
         df = reportReadFile(report)
+        # Некоторые операторы, могут внезапно изменить название столбца, 
+        # или забыть поставить номер заказа
+        # или оставить пустые строки в шаблоне
+        # нужно написать дополнительно три обработки на исключения...
         df['order_no'] = order_no
         df['dispatcher_design_date'] = dispatcher_design_date
         df_arr.append(df)
@@ -293,6 +300,8 @@ def techDocWorker(all_df):
     techdocdeficite(df) # Дефициты в файл
     deficite = techdocreport(df) # Дефициты в df
     all_df = worker_tech_doc(all_df, deficite) # Объединить остальную документацию и дефициты чертежей
+    
+    # all_df = all_df.loc[(df['pro'] == False) & (df['produced'] == True)]
     # all_df.to_excel('testfiles\\DeficitTechnicalDocumentation.xlsx')
     return all_df
 
