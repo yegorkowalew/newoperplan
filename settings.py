@@ -3,8 +3,8 @@ import os
 # TODAY = datetime.strptime('2020-02-14', "%Y-%m-%d")
 TODAY = datetime.now()
 
-BASE_PATH = 'C:\\work\\newoperplan\\testfiles' 
-# BASE_PATH = '\\\\srv-file\\FileServer\\ПДО_Производство' 
+# BASE_PATH = 'C:\\work\\newoperplan\\testfiles' 
+BASE_PATH = '\\\\srv-file\\FileServer\\ПДО_Производство' 
 
 ## Файл служебных записок
 SN_FILE = os.path.join(BASE_PATH, 'Служебные записки.xlsx')
