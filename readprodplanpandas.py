@@ -14,22 +14,22 @@ col_names_index = []
 periods_list = ['Ц', 'М', 'К', 'З']
 series_list = ['О', 'Z']
 
-
 class ReadFindError(Exception):
    pass
 
 def get_dates_list(ws, row_num, col_num):
     row_num = row_num-1
     dates_list = []
-    for col in range(col_num, ws.max_column+1):
-        date_str = ws.cell(row=row_num, column=col).value
-        if isinstance(date_str, datetime):
-            dates_list.append(date_str)
-        else:
-            if not dates_list:
-                raise ReadFindError('Что-то не так со строкой дат, значение: "%s" (строка: %s, столбец:%s)' % (date_str, row_num, col))
-            print('Что-то не так с датами, последняя %s, (строка: %s, столбец:%s)' % (dates_list[-1], row_num, col))
-            return dates_list
+    for row in ws.iter_rows(min_row=row_num, min_col=col_num, max_row=row_num, max_col=ws.max_column):
+        for cell in row:
+            date_str = cell.value
+            if isinstance(date_str, datetime):
+                dates_list.append(date_str)
+            else:
+                if not dates_list:
+                    raise ReadFindError('Что-то не так со строкой дат, значение: "%s" (строка: %s, столбец:%s)' % (date_str, row_num, cell))
+                print('Что-то не так с датами, последняя %s, (строка: %s, столбец:%s)' % (dates_list[-1], row_num, cell))
+                return dates_list
     return dates_list
 
 def find_day(ws):
@@ -67,9 +67,9 @@ def to_dict(file_path):
     try:
         first_day_coords = find_day(ws)
         print(first_day_coords)
-        # for col_name in col_names:
-        #     col_names_index.append(find_names_col_num(ws, first_day_coords[0], first_day_coords[1], col_name))
-        # dates_list = get_dates_list(ws, first_day_coords[0], first_day_coords[1])
+        for col_name in col_names:
+            col_names_index.append(find_names_col_num(ws, first_day_coords[0], first_day_coords[1], col_name))
+        dates_list = get_dates_list(ws, first_day_coords[0], first_day_coords[1])
     except ReadFindError as ind:
         print('Ошибка: %s' % ind)
         exit(0)
