@@ -1,12 +1,7 @@
 from openpyxl import load_workbook
 from datetime import datetime
 from collections import defaultdict
-# ID	Готово	Отгрузка	Продукция	Контрагент	№ Заказа	№ СЗ	Заказ	цех	Статус	нр	кр	ц	вып.		пн
-
-days_of_week = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
-
-in_id_name = 'ID'
-shop_name = 'цех'
+import pandas as pd
 
 col_names = ['ID', 'цех']
 col_names_index = []
@@ -44,12 +39,11 @@ def find_names_col_num(ws, row_num, col_num, find_text):
     # находим номера нужных столбцов
     for col in range(1, col_num):
         if find_text == ws.cell(row=row_num, column=col).value:
-            return col
+            return col-1
     raise ReadFindError('Не нашел столбец "%s"' % find_text)
 
-def get_word_dates(row, dates_list, periods_list, first_col):
+def get_word_dates(col_names_index, row, dates_list, periods_list, first_col):
     shop_dates = defaultdict(list)
-    
     for i in range(first_col, len(row)):
         val = row[i-1].value
         if val:
@@ -58,15 +52,18 @@ def get_word_dates(row, dates_list, periods_list, first_col):
     for key, value in shop_dates.items():
         if key in periods_list:
             shop_dates[key] = [value[0], value[-1]]
-    
-    return shop_dates
+    if not shop_dates:
+        pass
+    else:
+        shop_dates['in_id'] = row[col_names_index[0]].value
+        shop_dates['shop'] = row[col_names_index[1]].value
+        return shop_dates
 
 def to_dict(file_path):
     wb = load_workbook(filename=file_path, read_only=True)
     ws = wb['График']
     try:
         first_day_coords = find_day(ws)
-        print(first_day_coords)
         for col_name in col_names:
             col_names_index.append(find_names_col_num(ws, first_day_coords[0], first_day_coords[1], col_name))
         dates_list = get_dates_list(ws, first_day_coords[0], first_day_coords[1])
@@ -74,35 +71,33 @@ def to_dict(file_path):
         print('Ошибка: %s' % ind)
         exit(0)
 
-    # import time
-    # def timing():
-    #     # Счетчик времени, таймер
-    #     start_time = time.time()
-    #     return lambda x: print("[{:>7.2f}с.] {}".format(time.time() - start_time, x))
+    import time
+    def timing():
+        # Счетчик времени, таймер
+        start_time = time.time()
+        return lambda x: print("[{:>7.2f}с.] {}".format(time.time() - start_time, x))
     
-    # t = timing() 
+    t = timing() 
 
-    # full_dates = []
-    # # for row in range(first_day_coords[0]+1, ws.max_row+1):
-
-    #     # full_dates.append(get_word_dates(ws, periods_list, series_list, dates_list, col_names_index[0], col_names_index[1], row, first_day_coords[1], ws.max_column+1))
+    full_dates = []
     
-    # for row in ws.iter_rows(min_row=first_day_coords[0]+1, max_col=ws.max_column+1, max_row=ws.max_row+1):
-    # # for row in ws.iter_rows(min_row=115, max_col=ws.max_column+1, max_row=118):
-    #     zz = get_word_dates(row, dates_list, periods_list, first_day_coords[1])
-    #     if zz:
-    #         full_dates.append(zz)
-    # t("{:>5} Сделал".format('oo'))
+    for row in ws.iter_rows(min_row=first_day_coords[0]+1, max_col=ws.max_column+1, max_row=ws.max_row+1):
+        zz = get_word_dates(col_names_index, row, dates_list, periods_list, first_day_coords[1])
+        if zz:
+            full_dates.append(zz)
 
+    periods_list_list = []
 
-    # # for i in full_dates:
-    # #     for ss, kk in i.items():
-    # #         print(ss, kk)
+    for i in full_dates:
+        for shopitm in i.keys():
+            if shopitm in periods_list:
+                periods_list_list.append({'in_id':i['in_id'], 'letter':shopitm, 'shop':i['shop'], 'start_date':i[shopitm][0], 'end_date':i[shopitm][-1]})
+            elif shopitm in series_list:
+                for d_itm in i[shopitm]:
+                    periods_list_list.append({'in_id':i['in_id'], 'letter':shopitm, 'shop':i['shop'], 'start_date':d_itm, 'end_date':d_itm})
 
-    # # тут запускаем функцию поиска нужных букв
-
-def main():
-    to_dict('testfiles\\График план производства\\План производства.xlsx')
+    mdf = pd.DataFrame(periods_list_list)
+    mdf.to_excel('testfiles\\mdf.xlsx')
 
 if __name__ == "__main__":
-    main()
+    to_dict('Z:\\График план производства\\План производства.xlsx')
